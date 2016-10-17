@@ -1,4 +1,4 @@
-package com.mayreh.redshift
+package jp.ne.opt.redshift
 
 import java.sql.Connection
 import java.util.Properties

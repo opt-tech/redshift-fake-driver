@@ -1,6 +1,6 @@
-package com.mayreh.redshift
+package jp.ne.opt.redshift
 
-import java.sql.{ResultSet, PreparedStatement}
+import java.sql.{PreparedStatement, ResultSet}
 import java.util.Properties
 
 import org.postgresql.jdbc.PgConnection
