@@ -3,6 +3,7 @@ package org.h2.jdbc
 import java.sql.{Statement, PreparedStatement}
 import java.util.Properties
 
+import jp.ne.opt.redshiftfake.parse.CopyQueryParser
 import jp.ne.opt.redshiftfake.{PreparedStatementType, RedshiftFakePreparedStatement}
 
 class RedshiftFakeH2Connection(url: String, info: Properties) extends JdbcConnection(url, info) {
@@ -19,8 +20,10 @@ class RedshiftFakeH2Connection(url: String, info: Properties) extends JdbcConnec
   //========================
   // Intercept PreparedStatement
   //========================
-  override def prepareStatement(sql: String): PreparedStatement =
-    new RedshiftFakePreparedStatement(super.prepareStatement(sql), sql, this, PreparedStatementType.Plain)
+  override def prepareStatement(sql: String): PreparedStatement = CopyQueryParser.parse(sql) match {
+    case Some(_) => new RedshiftFakePreparedStatement(super.prepareStatement("select 1"), sql, this, PreparedStatementType.Plain)
+    case _ => new RedshiftFakePreparedStatement(super.prepareStatement(sql), sql, this, PreparedStatementType.Plain)
+  }
 
   override def prepareStatement(sql: String, columnNames: Array[String]): PreparedStatement =
     new RedshiftFakePreparedStatement(super.prepareStatement(sql, columnNames), sql, this, PreparedStatementType.ColumnNames(columnNames))

@@ -1,18 +1,27 @@
 package jp.ne.opt.redshiftfake.s3
 
+import com.amazonaws.auth.{BasicAWSCredentials, AWSStaticCredentialsProvider}
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.{ObjectListing, S3ObjectSummary}
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
+/**
+ * Provides features to access Amazon S3.
+ */
 trait S3Service {
   def lsRecurse(bucket: String, prefix: String): Seq[S3ObjectSummary]
 }
 
-class S3ServiceImpl(endpoint: String) extends S3Service {
+class S3ServiceImpl(endpoint: String, credentials: Credentials) extends S3Service {
   private[this] val s3ClientBuilder = {
     val builder = AmazonS3ClientBuilder.standard()
+    credentials match {
+      case Credentials.WithKey(accessKeyId, secretAccessKey) =>
+        builder.setCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKeyId, secretAccessKey)))
+      case _ =>
+    }
     builder
   }
 

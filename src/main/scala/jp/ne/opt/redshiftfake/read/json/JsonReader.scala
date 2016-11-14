@@ -1,4 +1,4 @@
-package jp.ne.opt.redshiftfake.read
+package jp.ne.opt.redshiftfake.read.json
 
 import jawn.ast.JParser
 import jp.ne.opt.redshiftfake.parse.Row
