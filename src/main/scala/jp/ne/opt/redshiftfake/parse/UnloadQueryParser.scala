@@ -1,4 +1,4 @@
-package jp.ne.opt.redshiftfake.parsing
+package jp.ne.opt.redshiftfake.parse
 
 import scala.util.parsing.combinator.RegexParsers
 
