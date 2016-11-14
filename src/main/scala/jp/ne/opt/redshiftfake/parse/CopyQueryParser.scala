@@ -4,6 +4,9 @@ import jp.ne.opt.redshiftfake.s3.Credentials
 
 import scala.util.parsing.combinator.RegexParsers
 
+/**
+ * Represents Redshift's COPY.
+ */
 case class CopyQuery(
   tableName: String,
   columnList: Option[Seq[String]],

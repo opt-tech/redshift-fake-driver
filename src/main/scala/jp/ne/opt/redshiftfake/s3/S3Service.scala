@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
 /**
- * Provides features to access Amazon S3.
+ * Provides features to access to Amazon S3.
  */
 trait S3Service {
   def lsRecurse(bucket: String, prefix: String): Seq[S3ObjectSummary]

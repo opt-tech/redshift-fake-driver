@@ -3,14 +3,14 @@ package org.h2.jdbc
 import java.sql.{DriverManager, Connection}
 import java.util.Properties
 
+import jp.ne.opt.redshiftfake.FakeConnection
 import org.h2.Driver
 
 class RedshiftFakeH2Driver extends Driver {
   import RedshiftFakeH2Driver._
 
-  override def connect(url: String, info: Properties): Connection = {
-    new RedshiftFakeH2Connection(url.replaceFirst(urlPrefix, "jdbc:h2"), info)
-  }
+  override def connect(url: String, info: Properties): Connection =
+    new FakeConnection(new JdbcConnection(url.replaceFirst(urlPrefix, "jdbc:h2"), info))
 
   override def acceptsURL(url: String): Boolean = url.startsWith(urlPrefix)
 }
