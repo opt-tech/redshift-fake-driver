@@ -1,4 +1,4 @@
-package jp.ne.opt.redshift
+package jp.ne.opt.redshiftfake
 
 import com.amazonaws.auth.BasicAWSCredentials
 

@@ -1,4 +1,4 @@
-package jp.ne.opt.redshift
+package jp.ne.opt.redshiftfake.postgres
 
 import java.sql.{PreparedStatement, ResultSet}
 import java.util.Properties
@@ -6,7 +6,7 @@ import java.util.Properties
 import org.postgresql.jdbc.PgConnection
 import org.postgresql.util.HostSpec
 
-class RedshiftLocalConnection(
+class RedshiftFakePostgresqlConnection(
   hostSpecs: Array[HostSpec],
   user: String,
   database: String,
