@@ -19,7 +19,8 @@ object PreparedStatementType {
 class RedshiftFakePreparedStatement(
   underlying: PreparedStatement,
   underlyingSql: String,
-  statementType: PreparedStatementType) extends PreparedStatement with QueryInterceptor {
+  connection: Connection,
+  statementType: PreparedStatementType) extends QueryInterceptor(connection) with PreparedStatement {
 
   def setTimestamp(parameterIndex: Int, x: Timestamp): Unit = underlying.setTimestamp(parameterIndex, x)
   def setTimestamp(parameterIndex: Int, x: Timestamp, cal: Calendar): Unit = underlying.setTimestamp(parameterIndex, x, cal)
@@ -47,15 +48,16 @@ class RedshiftFakePreparedStatement(
   def addBatch(): Unit = underlying.addBatch()
 
   def execute(): Boolean = {
-//    interceptCopy()
     println("**************** execute ****************")
     println(underlyingSql)
-    underlying.execute()
+
+    interceptCopy(underlyingSql)(true, underlying.execute())
   }
   def executeQuery(): ResultSet = {
     println("**************** executeQuery ****************")
     println(underlyingSql)
-    underlying.executeQuery()
+
+    interceptCopy(underlyingSql)(null, underlying.executeQuery())
   }
 
   def setNClob(parameterIndex: Int, value: NClob): Unit = underlying.setNClob(parameterIndex, value)
@@ -77,7 +79,8 @@ class RedshiftFakePreparedStatement(
   def executeUpdate(): Int = {
     println("**************** executeUpdate ****************")
     println(underlyingSql)
-    underlying.executeUpdate()
+
+    interceptCopy(underlyingSql)(0, underlying.executeUpdate())
   }
 
   def setTime(parameterIndex: Int, x: Time): Unit = underlying.setTime(parameterIndex, x)
