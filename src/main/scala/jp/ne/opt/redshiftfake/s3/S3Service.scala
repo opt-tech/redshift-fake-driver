@@ -2,7 +2,8 @@ package jp.ne.opt.redshiftfake.s3
 
 import com.amazonaws.auth.{BasicAWSCredentials, AWSStaticCredentialsProvider}
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import com.amazonaws.services.s3.model.{ObjectListing, S3ObjectSummary}
+import com.amazonaws.services.s3.model.{GetObjectRequest, ObjectListing, S3ObjectSummary}
+import jp.ne.opt.redshiftfake.util.Loan._
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
@@ -11,7 +12,15 @@ import scala.collection.JavaConverters._
  * Provides features to access to Amazon S3.
  */
 trait S3Service {
+  /**
+   * Returns a list of s3 objects have specified prefix.
+   */
   def lsRecurse(bucket: String, prefix: String): Seq[S3ObjectSummary]
+
+  /**
+   * Returns a content of s3 object as string for specified key.
+   */
+  def downloadAsString(bucket: String, prefix: String): String
 }
 
 class S3ServiceImpl(endpoint: String, credentials: Credentials) extends S3Service {
@@ -44,5 +53,13 @@ class S3ServiceImpl(endpoint: String, credentials: Credentials) extends S3Servic
       }
     }
     iter(Vector.empty, client.listObjects(bucket, prefix))
+  }
+
+  def downloadAsString(bucket: String, key: String): String = {
+    val client = mkClient
+    val request = new GetObjectRequest(bucket, key)
+    using(client.getObject(request)) { obj =>
+      io.Source.fromInputStream(obj.getObjectContent).mkString
+    }
   }
 }

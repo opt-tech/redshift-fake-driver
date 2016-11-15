@@ -7,8 +7,11 @@ import java.sql.{SQLWarning, Array => _, _}
 import java.util.Calendar
 
 import jp.ne.opt.redshiftfake.parse.CopyQuery
-import jp.ne.opt.redshiftfake.util._
+import jp.ne.opt.redshiftfake.util.Loan._
 
+/**
+ * Enum used to hold which overload of prepareStatement is called.
+ */
 sealed abstract class PreparedStatementType
 object PreparedStatementType {
   case object Plain extends PreparedStatementType
@@ -19,6 +22,9 @@ object PreparedStatementType {
   case class ColumnIndexes(columnIndexes: Array[Int]) extends PreparedStatementType
 }
 
+/**
+ * Base fake PreparedStatement.
+ */
 sealed abstract class FakePreparedStatement(underlying: PreparedStatement) extends PreparedStatement {
 
   def setTimestamp(parameterIndex: Int, x: Timestamp): Unit = underlying.setTimestamp(parameterIndex, x)
@@ -110,6 +116,9 @@ sealed abstract class FakePreparedStatement(underlying: PreparedStatement) exten
 }
 
 object FakePreparedStatement {
+  /**
+   * Just delegate to underlying.
+   */
   class FakeAsIsPreparedStatement(underlying: PreparedStatement) extends FakePreparedStatement(underlying) {
 
     def execute(): Boolean = underlying.execute()
@@ -127,6 +136,9 @@ object FakePreparedStatement {
     def executeBatch(): Array[Int] = underlying.executeBatch()
   }
 
+  /**
+   * Hold and execute COPY query.
+   */
   class FakeCopyPreparedStatement(
     underlying: PreparedStatement,
     query: CopyQuery,
@@ -135,6 +147,17 @@ object FakePreparedStatement {
 
     def execute(): Boolean = {
       using(connection.createStatement()) { stmt =>
+        val rs = connection.getMetaData.getColumns(
+          null, query.schemaName.orNull, query.tableName, "%")
+
+        Iterator.continually(rs).takeWhile(_.next()).foreach { rs =>
+          val columnName = rs.getString("COLUMN_NAME")
+          val columnType = JdbcType.valueOf(rs.getInt("DATA_TYPE"))
+          println(s"$columnName  :  $columnType")
+        }
+
+        rs.close()
+//        val insert = s"insert into ${query.tableName} values ()"
         stmt.execute("select * from foo_bar")
         println("--------------------------------")
         println(stmt.getResultSet)

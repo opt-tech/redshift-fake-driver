@@ -12,7 +12,8 @@ class CopyQueryParserTest extends FlatSpec {
         |""".stripMargin
 
     val expected = CopyQuery(
-      tableName = "public._foo_42",
+      schemaName = Some("public"),
+      tableName = "_foo_42",
       columnList = None,
       dataSource = "s3://some-bucket/path/to/data/foo-bar.csv",
       credentials = Credentials.WithKey(

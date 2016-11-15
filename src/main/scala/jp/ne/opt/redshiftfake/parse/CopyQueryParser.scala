@@ -8,11 +8,17 @@ import scala.util.parsing.combinator.RegexParsers
  * Represents Redshift's COPY.
  */
 case class CopyQuery(
+  schemaName: Option[String],
   tableName: String,
   columnList: Option[Seq[String]],
   dataSource: String,
   credentials: Credentials
-)
+) {
+  val qualifiedTableName = schemaName match {
+    case Some(schema) => s"$schema.$tableName"
+    case _ => tableName
+  }
+}
 
 sealed abstract class CopyFormat
 object CopyFormat {
@@ -20,9 +26,14 @@ object CopyFormat {
 }
 
 object CopyQueryParser extends RegexParsers {
+  case class TableAndSchemaName(schemaName: Option[String], tableName: String)
+
   def identifier = """[_a-zA-Z]\w*"""
   def space = """\s*"""
-  def tableNameParser = s"""$identifier[.]?$identifier""".r ^^ identity
+
+  def tableNameParser = ((identifier.r <~ ".").? ~ identifier.r) ^^ {
+    case ~(schemaName, tableName) => TableAndSchemaName(schemaName, tableName)
+  }
   def columnListParser = """\(\s*""".r ~> ((identifier.r <~ """\s*,\s*""".r).* ~ identifier.r) <~ """\s*\)""".r ^^ {
     case ~(init, last) => init :+ last
   }
@@ -41,9 +52,9 @@ object CopyQueryParser extends RegexParsers {
         (columnListParser.? <~ space.r) ~
         (s"""(?i)FROM$space""".r ~> dataSourceParser <~ space.r) ~
         (s"""(?i)WITH""".r.? ~> space.r ~> s"""(?i)CREDENTIALS$space""".r ~> s"""(?i)AS""".r.? ~> space.r ~> awsAuthArgsParser <~ space.r) <~
-        s""".*""".r ^^ { case ~(~(~(tableName, columnList), dataSource), auth) =>
+        s""".*""".r ^^ { case ~(~(~(TableAndSchemaName(schemaName, tableName), columnList), dataSource), auth) =>
 
-        CopyQuery(tableName, columnList, dataSource, auth)
+        CopyQuery(schemaName, tableName, columnList, dataSource, auth)
       },
       query
     )
