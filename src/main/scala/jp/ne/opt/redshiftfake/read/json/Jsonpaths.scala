@@ -41,6 +41,8 @@ class Jsonpaths(rawJsonpaths: String) {
     case JArray(array) => array.map(p => new Jsonpath(p.asString))
   }.getOrElse(throw InvalidJsonException(s"invalid jsonpaths : $rawJsonpaths")).toVector
 
+  val columnSize = parsedJsonpaths.size
+
   def bigDecimalOf(json: String, index: Int): BigDecimal = parsedJsonpaths(index).jValueOf(json).asBigDecimal
   def bigIntOf(json: String, index: Int): BigInt = parsedJsonpaths(index).jValueOf(json).asBigInt
   def booleanOf(json: String, index: Int): Boolean = parsedJsonpaths(index).jValueOf(json).asBoolean

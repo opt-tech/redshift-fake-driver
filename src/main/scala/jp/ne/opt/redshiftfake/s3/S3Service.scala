@@ -20,7 +20,7 @@ trait S3Service {
   /**
    * Returns a content of s3 object as string for specified key.
    */
-  def downloadAsString(bucket: String, prefix: String): String
+  def downloadAsString(bucket: String, key: String): String
 }
 
 class S3ServiceImpl(endpoint: String, credentials: Credentials) extends S3Service {

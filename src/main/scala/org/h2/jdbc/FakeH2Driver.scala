@@ -3,14 +3,18 @@ package org.h2.jdbc
 import java.sql.{DriverManager, Connection}
 import java.util.Properties
 
-import jp.ne.opt.redshiftfake.FakeConnection
+import jp.ne.opt.redshiftfake.{Global, FakeConnection}
+import jp.ne.opt.redshiftfake.s3.S3ServiceImpl
 import org.h2.Driver
 
 class FakeH2Driver extends Driver {
   import FakeH2Driver._
 
   override def connect(url: String, info: Properties): Connection =
-    new FakeConnection(new JdbcConnection(url.replaceFirst(urlPrefix, "jdbc:h2"), info))
+    new FakeConnection(
+      new JdbcConnection(url.replaceFirst(urlPrefix, "jdbc:h2"), info),
+      new S3ServiceImpl(Global.endpoint, Global.s3Credentials)
+    )
 
   override def acceptsURL(url: String): Boolean = url.startsWith(urlPrefix)
 }

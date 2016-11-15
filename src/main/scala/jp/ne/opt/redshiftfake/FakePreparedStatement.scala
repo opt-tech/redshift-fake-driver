@@ -6,7 +6,9 @@ import java.net.URL
 import java.sql.{SQLWarning, Array => _, _}
 import java.util.Calendar
 
-import jp.ne.opt.redshiftfake.parse.CopyQuery
+import jp.ne.opt.redshiftfake.Downloader.S3Downloader
+import jp.ne.opt.redshiftfake.parse.{CopyDataSource, CopyQuery}
+import jp.ne.opt.redshiftfake.s3.S3Service
 import jp.ne.opt.redshiftfake.util.Loan._
 
 /**
@@ -143,21 +145,31 @@ object FakePreparedStatement {
     underlying: PreparedStatement,
     query: CopyQuery,
     connection: Connection,
-    statementType: PreparedStatementType) extends FakePreparedStatement(underlying) {
+    statementType: PreparedStatementType,
+    s3Service: S3Service
+  ) extends FakePreparedStatement(underlying) {
 
-    def execute(): Boolean = {
-      using(connection.createStatement()) { stmt =>
-        val rs = connection.getMetaData.getColumns(
-          null, query.schemaName.orNull, query.tableName, "%")
-
-        val columns = Iterator.continually(rs).takeWhile(_.next()).map { rs =>
+    private[this] def fetchColumnDefinitions(): Vector[ColumnDefinition] = {
+      using(connection.getMetaData.getColumns(null, query.schemaName.orNull, query.tableName, "%")) { rs =>
+        Iterator.continually(rs).takeWhile(_.next()).map { rs =>
           val columnName = rs.getString("COLUMN_NAME")
           val columnType = JdbcType.valueOf(rs.getInt("DATA_TYPE"))
           ColumnDefinition(columnName, columnType)
         }.toVector
+      }
+    }
 
-        rs.close()
-        val placeHolders = columns.map(_ => "?").mkString(",")
+    def execute(): Boolean = {
+      val columnDefinitions = fetchColumnDefinitions()
+//      query.dataSource match {
+//        case CopyDataSource.S3(bucket, prefix) =>
+//          val downloader = new S3Downloader(s3Service)
+//          downloader.downloadAllAsString(bucket, prefix).lines
+//        case _ => Nil
+//      }
+
+      using(connection.createStatement()) { stmt =>
+        val placeHolders = columnDefinitions.map(_ => "?").mkString(",")
         val insertStmt = connection.prepareStatement(s"insert into ${query.qualifiedTableName} values ($placeHolders)")
 
 //        val insert = s"insert into ${query.tableName} values ()"
