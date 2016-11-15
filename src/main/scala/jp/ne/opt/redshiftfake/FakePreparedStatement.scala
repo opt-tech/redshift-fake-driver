@@ -150,14 +150,19 @@ object FakePreparedStatement {
         val rs = connection.getMetaData.getColumns(
           null, query.schemaName.orNull, query.tableName, "%")
 
-        Iterator.continually(rs).takeWhile(_.next()).foreach { rs =>
+        val columns = Iterator.continually(rs).takeWhile(_.next()).map { rs =>
           val columnName = rs.getString("COLUMN_NAME")
           val columnType = JdbcType.valueOf(rs.getInt("DATA_TYPE"))
-          println(s"$columnName  :  $columnType")
-        }
+          ColumnDefinition(columnName, columnType)
+        }.toVector
 
         rs.close()
+        val placeHolders = columns.map(_ => "?").mkString(",")
+        val insertStmt = connection.prepareStatement(s"insert into ${query.qualifiedTableName} values ($placeHolders)")
+
 //        val insert = s"insert into ${query.tableName} values ()"
+        insertStmt.executeUpdate()
+
         stmt.execute("select * from foo_bar")
         println("--------------------------------")
         println(stmt.getResultSet)
