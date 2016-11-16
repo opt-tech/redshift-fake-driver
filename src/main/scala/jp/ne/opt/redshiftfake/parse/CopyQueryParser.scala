@@ -1,5 +1,6 @@
 package jp.ne.opt.redshiftfake.parse
 
+import jp.ne.opt.redshiftfake.Global
 import jp.ne.opt.redshiftfake.s3.{S3Location, Credentials}
 
 import scala.util.parsing.combinator.RegexParsers
@@ -47,7 +48,7 @@ object CopyQueryParser extends RegexParsers {
     case ~(init, last) => init :+ last
   }
 
-  def s3LocationParser = "s3://" ~> """[\w-]+""".r ~ ("/" ~> """[\w/:%#$&?()~.=+-]+""".r).? ^^ {
+  def s3LocationParser = Global.s3Endpoint ~> """[\w-]+""".r ~ ("/" ~> """[\w/:%#$&?()~.=+-]+""".r).? ^^ {
     case ~(bucket, prefix) => S3Location(bucket, prefix.getOrElse(""))
   }
 

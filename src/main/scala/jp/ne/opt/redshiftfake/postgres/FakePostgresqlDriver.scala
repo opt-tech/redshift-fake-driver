@@ -9,6 +9,6 @@ import org.postgresql.Driver
 
 class FakePostgresqlDriver extends Driver {
   override def connect(url: String, info: Properties): Connection = {
-    new FakeConnection(super.connect(url, info), new S3ServiceImpl(Global.endpoint, Global.s3Credentials))
+    new FakeConnection(super.connect(url, info), new S3ServiceImpl(Global.s3Endpoint, Global.s3Credentials))
   }
 }

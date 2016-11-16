@@ -1,7 +1,7 @@
 package jp.ne.opt.redshiftfake.s3
 
-import com.amazonaws.auth.{BasicAWSCredentials, AWSStaticCredentialsProvider}
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.services.s3.{S3ClientOptions, AmazonS3Client}
 import com.amazonaws.services.s3.model.{GetObjectRequest, ObjectListing, S3ObjectSummary}
 import jp.ne.opt.redshiftfake.util.Loan._
 
@@ -24,19 +24,17 @@ trait S3Service {
 }
 
 class S3ServiceImpl(endpoint: String, credentials: Credentials) extends S3Service {
-  private[this] val s3ClientBuilder = {
-    val builder = AmazonS3ClientBuilder.standard()
-    credentials match {
-      case Credentials.WithKey(accessKeyId, secretAccessKey) =>
-        builder.setCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKeyId, secretAccessKey)))
-      case _ =>
-    }
-    builder
-  }
 
   private[this] def mkClient = {
-    val client = s3ClientBuilder
-      .build()
+    val client = credentials match {
+      case Credentials.WithKey(accessKeyId, secretAccessKey) =>
+        new AmazonS3Client(new BasicAWSCredentials(accessKeyId, secretAccessKey))
+      case _ =>
+        new AmazonS3Client()
+    }
+    client.setS3ClientOptions(
+      S3ClientOptions.builder().setPathStyleAccess(true).disableChunkedEncoding().build()
+    )
     client.setEndpoint(endpoint)
     client
   }
@@ -62,4 +60,10 @@ class S3ServiceImpl(endpoint: String, credentials: Credentials) extends S3Servic
       io.Source.fromInputStream(obj.getObjectContent).mkString
     }
   }
+
+  def uploadString(bucket: String, key: String, content: String): Unit = {
+    mkClient.putObject(bucket, key, content)
+  }
+
+  def createBucket(name: String): Unit = { mkClient.createBucket(name) }
 }

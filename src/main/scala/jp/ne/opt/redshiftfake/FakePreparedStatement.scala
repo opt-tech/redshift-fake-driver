@@ -149,7 +149,7 @@ object FakePreparedStatement {
   ) extends FakePreparedStatement(underlying) {
 
     private[this] def fetchColumnDefinitions(): Vector[ColumnDefinition] = {
-      using(connection.getMetaData.getColumns(null, query.schemaName.orNull, query.tableName, "%")) { rs =>
+      using(connection.getMetaData.getColumns(null, query.schemaName.orNull, query.tableName.toUpperCase, "%")) { rs =>
         Iterator.continually(rs).takeWhile(_.next()).map { rs =>
           val columnName = rs.getString("COLUMN_NAME")
           val columnType = JdbcType.valueOf(rs.getInt("DATA_TYPE"))
@@ -166,7 +166,7 @@ object FakePreparedStatement {
       reader.read().foreach { case Row(columns) =>
         using(connection.prepareStatement(s"insert into ${query.qualifiedTableName} values ($placeHolders)")) { stmt =>
           columns.zip(columnDefinitions).zipWithIndex.foreach { case ((Column(value), ColumnDefinition(_, columnType)), parameterIndex) =>
-            ParameterBinder(columnType).bind(value, stmt, parameterIndex)
+            ParameterBinder(columnType).bind(value, stmt, parameterIndex + 1)
           }
 
           stmt.executeUpdate()
