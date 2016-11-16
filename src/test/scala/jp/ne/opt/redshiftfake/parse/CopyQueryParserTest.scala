@@ -1,7 +1,7 @@
 package jp.ne.opt.redshiftfake.parse
 
-import jp.ne.opt.redshiftfake.Global
-import jp.ne.opt.redshiftfake.s3.{S3Location, Credentials}
+import jp.ne.opt.redshiftfake._
+import jp.ne.opt.redshiftfake.s3.S3Location
 import org.scalatest.FlatSpec
 
 class CopyQueryParserTest extends FlatSpec {

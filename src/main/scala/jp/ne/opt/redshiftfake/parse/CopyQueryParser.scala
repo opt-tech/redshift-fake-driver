@@ -1,37 +1,9 @@
 package jp.ne.opt.redshiftfake.parse
 
-import jp.ne.opt.redshiftfake.Global
-import jp.ne.opt.redshiftfake.s3.{S3Location, Credentials}
+import jp.ne.opt.redshiftfake._
+import jp.ne.opt.redshiftfake.s3.S3Location
 
 import scala.util.parsing.combinator.RegexParsers
-
-/**
- * Represents Redshift's COPY.
- */
-case class CopyQuery(
-  schemaName: Option[String],
-  tableName: String,
-  columnList: Option[Seq[String]],
-  dataSource: CopyDataSource,
-  credentials: Credentials,
-  copyFormat: CopyFormat
-) {
-  val qualifiedTableName = schemaName match {
-    case Some(schema) => s"$schema.$tableName"
-    case _ => tableName
-  }
-}
-
-sealed abstract class CopyFormat
-object CopyFormat {
-  case object Default extends CopyFormat
-  case class Json(jsonpathsLocation: Option[S3Location]) extends CopyFormat
-}
-
-sealed abstract class CopyDataSource
-object CopyDataSource {
-  case class S3(location: S3Location) extends CopyDataSource
-}
 
 object CopyQueryParser extends RegexParsers {
   case class TableAndSchemaName(schemaName: Option[String], tableName: String)

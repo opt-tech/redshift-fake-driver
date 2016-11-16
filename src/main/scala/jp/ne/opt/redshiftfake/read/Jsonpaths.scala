@@ -1,6 +1,6 @@
-package jp.ne.opt.redshiftfake.read.json
+package jp.ne.opt.redshiftfake.read
 
-import jawn.ast.{JValue, JArray, JParser}
+import jawn.ast.{JArray, JParser, JValue}
 
 import scala.annotation.tailrec
 

@@ -3,6 +3,7 @@ package jp.ne.opt.redshiftfake.s3
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.services.s3.{S3ClientOptions, AmazonS3Client}
 import com.amazonaws.services.s3.model.{GetObjectRequest, ObjectListing, S3ObjectSummary}
+import jp.ne.opt.redshiftfake.Credentials
 import jp.ne.opt.redshiftfake.util.Loan._
 
 import scala.annotation.tailrec

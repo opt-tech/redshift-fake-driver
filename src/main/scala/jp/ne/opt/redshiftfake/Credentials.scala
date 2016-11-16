@@ -1,4 +1,4 @@
-package jp.ne.opt.redshiftfake.s3
+package jp.ne.opt.redshiftfake
 
 /**
  * Represents credentials for COPY/UNLOAD queries.

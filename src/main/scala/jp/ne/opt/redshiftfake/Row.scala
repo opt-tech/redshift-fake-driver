@@ -1,5 +1,8 @@
 package jp.ne.opt.redshiftfake
 
-case class Column(rawValue: String)
-
+/**
+ * Represents a row to be inserted.
+ */
 case class Row(columns: Seq[Column])
+
+case class Column(rawValue: String)

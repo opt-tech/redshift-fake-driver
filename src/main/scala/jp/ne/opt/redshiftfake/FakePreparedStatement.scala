@@ -6,7 +6,6 @@ import java.net.URL
 import java.sql.{SQLWarning, Array => _, _}
 import java.util.Calendar
 
-import jp.ne.opt.redshiftfake.parse._
 import jp.ne.opt.redshiftfake.s3.S3Service
 import jp.ne.opt.redshiftfake.util.Loan._
 
