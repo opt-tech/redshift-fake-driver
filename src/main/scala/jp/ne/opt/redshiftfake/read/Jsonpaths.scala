@@ -1,6 +1,6 @@
 package jp.ne.opt.redshiftfake.read
 
-import jawn.ast.{JArray, JParser, JValue}
+import jawn.ast._
 
 import scala.annotation.tailrec
 
@@ -40,7 +40,14 @@ class Jsonpaths(rawJsonpaths: String) {
   class IndexedReader(document: String) {
     private[this] val parsedDocument = JParser.parseFromString(document).get
 
-    def valueAt(index: Int): String = parsedJsonpaths(index).jValueOf(parsedDocument).render()
+    def valueAt(index: Int): Option[String] = {
+      val jValue = parsedJsonpaths(index).jValueOf(parsedDocument)
+      jValue match {
+        case JNull => None
+        case JString(s) => Some(s)
+        case _ => Some(jValue.render())
+      }
+    }
   }
 
   private[this] val parsedJsonpaths: Vector[Jsonpath] = JParser.parseFromString(rawJsonpaths).toOption.map(_.get("jsonpaths")).collect {

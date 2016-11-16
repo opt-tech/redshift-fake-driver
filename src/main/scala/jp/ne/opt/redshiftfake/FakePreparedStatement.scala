@@ -165,7 +165,10 @@ object FakePreparedStatement {
       reader.read().foreach { case Row(columns) =>
         using(connection.prepareStatement(s"insert into ${query.qualifiedTableName} values ($placeHolders)")) { stmt =>
           columns.zip(columnDefinitions).zipWithIndex.foreach { case ((Column(value), ColumnDefinition(_, columnType)), parameterIndex) =>
-            ParameterBinder(columnType).bind(value, stmt, parameterIndex + 1)
+            value match {
+              case Some(s) => ParameterBinder(columnType).bind(s, stmt, parameterIndex + 1)
+              case _ => stmt.setObject(parameterIndex + 1, null)
+            }
           }
 
           stmt.executeUpdate()

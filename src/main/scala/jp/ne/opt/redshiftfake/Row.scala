@@ -5,4 +5,4 @@ package jp.ne.opt.redshiftfake
  */
 case class Row(columns: Seq[Column])
 
-case class Column(rawValue: String)
+case class Column(rawValue: Option[String])

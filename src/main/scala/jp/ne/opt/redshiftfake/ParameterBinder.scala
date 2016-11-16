@@ -13,109 +13,91 @@ object ParameterBinder {
       statement.setShort(parameterIndex, BigDecimal(rawValue).toShort)
     }
   }
-
   class SmallInt extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setShort(parameterIndex, BigDecimal(rawValue).toShort)
     }
   }
-
   class Integer extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setInt(parameterIndex, BigDecimal(rawValue).toInt)
     }
   }
-
   class BigInt extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setLong(parameterIndex, BigDecimal(rawValue).toLong)
     }
   }
-
   class Float extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setDouble(parameterIndex, BigDecimal(rawValue).toDouble)
     }
   }
-
   class Real extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setFloat(parameterIndex, BigDecimal(rawValue).toFloat)
     }
   }
-
   class Double extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setDouble(parameterIndex, BigDecimal(rawValue).toDouble)
     }
   }
-
   class Numeric extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setBigDecimal(parameterIndex, BigDecimal(rawValue).bigDecimal)
     }
   }
-
   class Decimal extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setBigDecimal(parameterIndex, BigDecimal(rawValue).bigDecimal)
     }
   }
-
   class Char extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setString(parameterIndex, rawValue)
     }
   }
-
   class Varchar extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setString(parameterIndex, rawValue)
     }
   }
-
   class LongVarchar extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setString(parameterIndex, rawValue)
     }
   }
-
   class Date extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       ???
     }
   }
-
   class Timestamp extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       ???
     }
   }
-
   class Boolean extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setBoolean(parameterIndex, rawValue.toBoolean)
     }
   }
-
   class NChar extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setString(parameterIndex, rawValue)
     }
   }
-
   class NVarchar extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setString(parameterIndex, rawValue)
     }
   }
-
   class LongNVarchar extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setString(parameterIndex, rawValue)
     }
   }
-
   class TimestampWithTimezone extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       ???
