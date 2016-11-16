@@ -13,5 +13,5 @@ scalacOptions ++= Seq(
   "-feature"
 )
 
-libraryDependencies ++=
-  (compileScope(parser, jawn) ++ testScope(postgres, h2, s3, scalatest) ++ providedScope(postgres, h2, s3))
+libraryDependencies ++= (
+  compileScope(parser, jawn, scalaCsv) ++ testScope(postgres, h2, s3, scalatest) ++ providedScope(postgres, h2, s3))
