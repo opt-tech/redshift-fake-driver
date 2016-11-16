@@ -15,20 +15,14 @@ class FakeConnection(underlying: Connection, s3Service: S3Service) extends Conne
   //========================
   // Intercept Statement
   //========================
-  def createStatement(): Statement = underlying.createStatement()
+  def createStatement(): Statement = new FakeStatement(
+    underlying.createStatement(), underlying, StatementType.Plain, s3Service)
   def createStatement(resultSetType: Int, resultSetConcurrency: Int): Statement =
-    underlying.createStatement(resultSetType, resultSetConcurrency)
+    new FakeStatement(underlying.createStatement(), underlying,
+      StatementType.ResultSetTypeConcurrency(resultSetType, resultSetConcurrency), s3Service)
   def createStatement(resultSetType: Int, resultSetConcurrency: Int, resultSetHoldability: Int): Statement =
-    underlying.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability)
-
-  //========================
-  // Intercept CallableStatement
-  //========================
-  def prepareCall(sql: String): CallableStatement = underlying.prepareCall(sql)
-  def prepareCall(sql: String, resultSetType: Int, resultSetConcurrency: Int): CallableStatement =
-    underlying.prepareCall(sql, resultSetType, resultSetConcurrency)
-  def prepareCall(sql: String, resultSetType: Int, resultSetConcurrency: Int, resultSetHoldability: Int): CallableStatement =
-    underlying.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability)
+    new FakeStatement(underlying.createStatement(), underlying,
+      StatementType.ResultSetTypeConcurrencyHoldability(resultSetType, resultSetConcurrency, resultSetHoldability), s3Service)
 
   //========================
   // Intercept PreparedStatement
@@ -110,4 +104,9 @@ class FakeConnection(underlying: Connection, s3Service: S3Service) extends Conne
   def commit(): Unit = underlying.commit()
   def unwrap[T](iface: Class[T]): T = underlying.unwrap(iface)
   def isWrapperFor(iface: Class[_]): Boolean = underlying.isWrapperFor(iface)
+  def prepareCall(sql: String): CallableStatement = underlying.prepareCall(sql)
+  def prepareCall(sql: String, resultSetType: Int, resultSetConcurrency: Int): CallableStatement =
+    underlying.prepareCall(sql, resultSetType, resultSetConcurrency)
+  def prepareCall(sql: String, resultSetType: Int, resultSetConcurrency: Int, resultSetHoldability: Int): CallableStatement =
+    underlying.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability)
 }

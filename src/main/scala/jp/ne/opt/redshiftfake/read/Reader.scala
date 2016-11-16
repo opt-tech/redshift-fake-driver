@@ -16,7 +16,7 @@ class Reader(copyQuery: CopyQuery, columnDefinitions: Seq[ColumnDefinition], s3S
 
         copyQuery.copyFormat match {
           case CopyFormat.Json(Some(jsonpathsLocation)) =>
-            val rawJsonpaths = s3Service.downloadAsString(jsonpathsLocation.bucket, jsonpathsLocation.prefix)
+            val rawJsonpaths = s3Service.downloadAsString(S3Location(jsonpathsLocation.bucket, jsonpathsLocation.prefix))
             val jsonpaths = new Jsonpaths(rawJsonpaths)
 
             (for {
@@ -36,9 +36,9 @@ class Reader(copyQuery: CopyQuery, columnDefinitions: Seq[ColumnDefinition], s3S
   }
 
   private[this] def downloadAllAsStringFromS3(location: S3Location): Seq[String] = {
-    val summaries = s3Service.lsRecurse(location.bucket, location.prefix)
+    val summaries = s3Service.lsRecurse(location)
     summaries.map { summary =>
-      s3Service.downloadAsString(location.bucket, summary.getKey)
+      s3Service.downloadAsString(S3Location(location.bucket, summary.getKey))
     }
   }
 }

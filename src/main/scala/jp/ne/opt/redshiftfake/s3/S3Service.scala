@@ -16,12 +16,17 @@ trait S3Service {
   /**
    * Returns a list of s3 objects have specified prefix.
    */
-  def lsRecurse(bucket: String, prefix: String): Seq[S3ObjectSummary]
+  def lsRecurse(location: S3Location): Seq[S3ObjectSummary]
 
   /**
    * Returns a content of s3 object as string for specified key.
    */
-  def downloadAsString(bucket: String, key: String): String
+  def downloadAsString(location: S3Location): String
+
+  /**
+   * Upload a string content to specified location.
+   */
+  def uploadString(location: S3Location, content: String): Unit
 }
 
 class S3ServiceImpl(endpoint: String, credentials: Credentials) extends S3Service {
@@ -40,7 +45,7 @@ class S3ServiceImpl(endpoint: String, credentials: Credentials) extends S3Servic
     client
   }
 
-  def lsRecurse(bucket: String, prefix: String): Seq[S3ObjectSummary] = {
+  def lsRecurse(location: S3Location): Seq[S3ObjectSummary] = {
     val client = mkClient
 
     @tailrec def iter(result: Seq[S3ObjectSummary], listing: ObjectListing): Seq[S3ObjectSummary] = {
@@ -51,20 +56,18 @@ class S3ServiceImpl(endpoint: String, credentials: Credentials) extends S3Servic
         result ++ summaries
       }
     }
-    iter(Vector.empty, client.listObjects(bucket, prefix))
+    iter(Vector.empty, client.listObjects(location.bucket, location.prefix))
   }
 
-  def downloadAsString(bucket: String, key: String): String = {
+  def downloadAsString(location: S3Location): String = {
     val client = mkClient
-    val request = new GetObjectRequest(bucket, key)
+    val request = new GetObjectRequest(location.bucket, location.prefix)
     using(client.getObject(request)) { obj =>
       io.Source.fromInputStream(obj.getObjectContent).mkString
     }
   }
 
-  def uploadString(bucket: String, key: String, content: String): Unit = {
-    mkClient.putObject(bucket, key, content)
+  def uploadString(location: S3Location, content: String): Unit = {
+    mkClient.putObject(location.bucket, location.prefix, content)
   }
-
-  def createBucket(name: String): Unit = { mkClient.createBucket(name) }
 }
