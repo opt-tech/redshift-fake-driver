@@ -6,10 +6,8 @@ import java.net.URL
 import java.sql.{SQLWarning, Array => _, _}
 import java.util.Calendar
 
-import jp.ne.opt.redshiftfake.Downloader.S3Downloader
-import jp.ne.opt.redshiftfake.parse.{CopyFormat, Row, CopyDataSource, CopyQuery}
-import jp.ne.opt.redshiftfake.read.json.Jsonpaths
-import jp.ne.opt.redshiftfake.s3.{S3Location, S3Service}
+import jp.ne.opt.redshiftfake.parse._
+import jp.ne.opt.redshiftfake.s3.S3Service
 import jp.ne.opt.redshiftfake.util.Loan._
 
 /**
@@ -160,60 +158,22 @@ object FakePreparedStatement {
       }
     }
 
-    private[this] def downloadLines(): Seq[String] = {
-      query.dataSource match {
-        case CopyDataSource.S3(S3Location(bucket, prefix)) =>
-          val downloader = new S3Downloader(s3Service)
-          downloader.downloadAllAsString(bucket, prefix).lines.toList
-        case _ => Nil
-      }
-    }
-
-//    private[this] def linesToRows(lines: Seq[String]): Seq[Row] = {
-//
-//    }
-
     def execute(): Boolean = {
       val columnDefinitions = fetchColumnDefinitions()
       val placeHolders = columnDefinitions.map(_ => "?").mkString(",")
-      query.copyFormat match {
-        case CopyFormat.Json(Some(jsonpathsLocation)) =>
-          val jsonpathsText = s3Service.downloadAsString(jsonpathsLocation.bucket, jsonpathsLocation.prefix)
-          val jsonpaths = new Jsonpaths(jsonpathsText)
+      val reader = new read.Reader(query, columnDefinitions, s3Service)
 
-          downloadLines().foreach { line =>
-            val reader = jsonpaths.mkReader(line)
-
-            val placeHolders = columnDefinitions.map(_ => "?").mkString(",")
-            val insertStmt = connection.prepareStatement(s"insert into ${query.qualifiedTableName} values ($placeHolders)")
-            columnDefinitions.foreach { definition =>
-              ParameterBinder(definition.columnType).bind("", insertStmt, 0)
-            }
+      reader.read().foreach { case Row(columns) =>
+        using(connection.prepareStatement(s"insert into ${query.qualifiedTableName} values ($placeHolders)")) { stmt =>
+          columns.zip(columnDefinitions).zipWithIndex.foreach { case ((Column(value), ColumnDefinition(_, columnType)), parameterIndex) =>
+            ParameterBinder(columnType).bind(value, stmt, parameterIndex)
           }
-        case _ =>
+
+          stmt.executeUpdate()
+        }
       }
 
-//      val lines = downloadLines()
-//      rows.foreach { row =>
-//        val insertStmt = connection.prepareStatement(s"insert into ${query.qualifiedTableName} values ($placeHolders)")
-//        row.columns.zipWithIndex.foreach { case (column, i) =>
-//          insertStmt.setArray()
-//        }
-//      }
-
-      using(connection.createStatement()) { stmt =>
-        val placeHolders = columnDefinitions.map(_ => "?").mkString(",")
-        val insertStmt = connection.prepareStatement(s"insert into ${query.qualifiedTableName} values ($placeHolders)")
-
-//        val insert = s"insert into ${query.tableName} values ()"
-        insertStmt.executeUpdate()
-
-        stmt.execute("select * from foo_bar")
-        println("--------------------------------")
-        println(stmt.getResultSet)
-        println("--------------------------------")
-        true
-      }
+      true
     }
 
     def executeQuery(): ResultSet = underlying.executeQuery()

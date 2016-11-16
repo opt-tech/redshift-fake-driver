@@ -40,14 +40,12 @@ class Jsonpaths(rawJsonpaths: String) {
   class IndexedReader(document: String) {
     private[this] val parsedDocument = JParser.parseFromString(document).get
 
-    def numberOf(index: Int): BigDecimal = parsedJsonpaths(index).jValueOf(parsedDocument).asBigDecimal
-    def booleanOf(index: Int): Boolean = parsedJsonpaths(index).jValueOf(parsedDocument).asBoolean
-    def stringOf(index: Int): String = parsedJsonpaths(index).jValueOf(parsedDocument).asString
+    def valueAt(index: Int): String = parsedJsonpaths(index).jValueOf(parsedDocument).render()
   }
 
   private[this] val parsedJsonpaths: Vector[Jsonpath] = JParser.parseFromString(rawJsonpaths).toOption.map(_.get("jsonpaths")).collect {
     case JArray(array) => array.map(p => new Jsonpath(p.asString))
-  }.getOrElse(throw InvalidJsonException(s"invalid jsonpaths : $rawJsonpaths")).toVector
+  }.get.toVector
 
   val columnSize = parsedJsonpaths.size
 
