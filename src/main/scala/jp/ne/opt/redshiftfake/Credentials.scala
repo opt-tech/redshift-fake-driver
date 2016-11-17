@@ -1,7 +1,7 @@
 package jp.ne.opt.redshiftfake
 
 /**
- * Represents credentials for COPY/UNLOAD queries.
+ * Represents credentials for COPY/UNLOAD commands.
  */
 sealed abstract class Credentials
 object Credentials {

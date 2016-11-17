@@ -5,7 +5,7 @@ import jp.ne.opt.redshiftfake.s3.S3Location
 
 import scala.util.parsing.combinator.RegexParsers
 
-object CopyQueryParser extends RegexParsers {
+object CopyCommandParser extends RegexParsers {
   case class TableAndSchemaName(schemaName: Option[String], tableName: String)
 
   def identifier = """[_a-zA-Z]\w*"""
@@ -43,7 +43,7 @@ object CopyQueryParser extends RegexParsers {
     "(?i)FORMAT".r.? ~> space.r ~> "(?i)AS".r.? ~> space.r ~> json.? ^^ (_.getOrElse(CopyFormat.Default))
   }
 
-  def parse(query: String): Option[CopyQuery] = {
+  def parse(query: String): Option[CopyCommand] = {
     val result = parse(
       (s"$space(?i)COPY$space".r ~> tableNameParser <~ space.r) ~
         (columnListParser.? <~ space.r) ~
@@ -51,7 +51,7 @@ object CopyQueryParser extends RegexParsers {
         ("(?i)WITH".r.? ~> space.r ~> s"(?i)CREDENTIALS$space".r ~> "(?i)AS".r.? ~> space.r ~> awsAuthArgsParser <~ space.r) ~
         (copyFormatParser <~ space.r) <~
         s""".*""".r ^^ { case ~(~(~(~(TableAndSchemaName(schemaName, tableName), columnList), dataSource), auth), format) =>
-        CopyQuery(schemaName, tableName, columnList, dataSource, auth, format)
+        CopyCommand(schemaName, tableName, columnList, dataSource, auth, format)
       },
       query
     )

@@ -141,28 +141,28 @@ object FakePreparedStatement {
   }
 
   /**
-   * Hold and execute COPY query.
+   * Hold and execute COPY command.
    */
   class FakeCopyPreparedStatement(
     underlying: PreparedStatement,
-    query: CopyQuery,
+    command: CopyCommand,
     connection: Connection,
     statementType: PreparedStatementType,
     s3Service: S3Service
   ) extends FakePreparedStatement(underlying) with CopyInterceptor {
 
     def execute(): Boolean = {
-      executeCopy(connection, query, s3Service)
+      executeCopy(connection, command, s3Service)
       false
     }
 
     def executeQuery(): ResultSet = {
-      executeCopy(connection, query, s3Service)
+      executeCopy(connection, command, s3Service)
       underlying.executeQuery()
     }
 
     def executeUpdate(): Int = {
-      executeCopy(connection, query, s3Service)
+      executeCopy(connection, command, s3Service)
       0
     }
   }

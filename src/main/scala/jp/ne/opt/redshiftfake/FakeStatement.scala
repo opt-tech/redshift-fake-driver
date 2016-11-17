@@ -2,7 +2,7 @@ package jp.ne.opt.redshiftfake
 
 import java.sql.{ResultSet, SQLWarning, Connection, Statement}
 
-import jp.ne.opt.redshiftfake.parse.CopyQueryParser
+import jp.ne.opt.redshiftfake.parse.CopyCommandParser
 import jp.ne.opt.redshiftfake.s3.S3Service
 
 /**
@@ -98,9 +98,9 @@ class FakeStatement(
   }
 
   private[this] def switchExecute[A](sql: String)(default: => A, switched: => A): A = {
-    CopyQueryParser.parse(sql) match {
-      case Some(query) =>
-        executeCopy(connection, query, s3Service)
+    CopyCommandParser.parse(sql) match {
+      case Some(commandy) =>
+        executeCopy(connection, commandy, s3Service)
         switched
       case _ =>
         default

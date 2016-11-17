@@ -6,15 +6,15 @@ import jp.ne.opt.redshiftfake.s3.{S3Location, S3Service}
 /**
  * Provides features to download text from dataSource and read into rows.
  */
-class Reader(copyQuery: CopyQuery, columnDefinitions: Seq[ColumnDefinition], s3Service: S3Service) {
+class Reader(copyCommand: CopyCommand, columnDefinitions: Seq[ColumnDefinition], s3Service: S3Service) {
 
   // TODO: Support more dataSources and formats
   def read(): Seq[Row] = {
-    copyQuery.dataSource match {
+    copyCommand.dataSource match {
       case CopyDataSource.S3(location) =>
         val files = downloadAllAsStringFromS3(location)
 
-        copyQuery.copyFormat match {
+        copyCommand.copyFormat match {
           case CopyFormat.Json(Some(jsonpathsLocation)) =>
             val rawJsonpaths = s3Service.downloadAsString(S3Location(jsonpathsLocation.bucket, jsonpathsLocation.prefix))
             val jsonpaths = new Jsonpaths(rawJsonpaths)

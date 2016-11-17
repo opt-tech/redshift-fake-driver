@@ -5,7 +5,7 @@ import jp.ne.opt.redshiftfake.s3.S3Location
 /**
  * Represents Redshift's COPY.
  */
-case class CopyQuery(
+case class CopyCommand(
   schemaName: Option[String],
   tableName: String,
   columnList: Option[Seq[String]],
