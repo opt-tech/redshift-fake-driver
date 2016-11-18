@@ -11,7 +11,9 @@ case class CopyCommand(
   columnList: Option[Seq[String]],
   dataSource: CopyDataSource,
   credentials: Credentials,
-  copyFormat: CopyFormat
+  copyFormat: CopyFormat,
+  dateFormatType: DateFormatType,
+  timeFormatType: TimeFormatType
 ) {
   val qualifiedTableName = schemaName match {
     case Some(schema) => s"$schema.$tableName"
@@ -28,4 +30,20 @@ sealed abstract class CopyFormat
 object CopyFormat {
   case object Default extends CopyFormat
   case class Json(jsonpathsLocation: Option[S3Location]) extends CopyFormat
+}
+
+sealed abstract class DateFormatType
+object DateFormatType {
+  case object Default extends DateFormatType
+  case object Auto extends DateFormatType
+  case class Custom(pattern: String) extends DateFormatType
+}
+
+sealed abstract class TimeFormatType
+object TimeFormatType {
+  case object Default extends TimeFormatType
+  case object Auto extends TimeFormatType
+  case object Epochsecs extends TimeFormatType
+  case object EpochMillisecs extends TimeFormatType
+  case class Custom(pattern: String) extends TimeFormatType
 }

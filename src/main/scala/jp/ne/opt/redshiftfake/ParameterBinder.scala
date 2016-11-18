@@ -8,119 +8,125 @@ sealed abstract class ParameterBinder {
 
 object ParameterBinder {
 
-  class TinyInt extends ParameterBinder {
+  case object TinyInt extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setShort(parameterIndex, BigDecimal(rawValue).toShort)
     }
   }
-  class SmallInt extends ParameterBinder {
+  case object SmallInt extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setShort(parameterIndex, BigDecimal(rawValue).toShort)
     }
   }
-  class Integer extends ParameterBinder {
+  case object Integer extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setInt(parameterIndex, BigDecimal(rawValue).toInt)
     }
   }
-  class BigInt extends ParameterBinder {
+  case object BigInt extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setLong(parameterIndex, BigDecimal(rawValue).toLong)
     }
   }
-  class Float extends ParameterBinder {
+  case object Float extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setDouble(parameterIndex, BigDecimal(rawValue).toDouble)
     }
   }
-  class Real extends ParameterBinder {
+  case object Real extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setFloat(parameterIndex, BigDecimal(rawValue).toFloat)
     }
   }
-  class Double extends ParameterBinder {
+  case object Double extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setDouble(parameterIndex, BigDecimal(rawValue).toDouble)
     }
   }
-  class Numeric extends ParameterBinder {
+  case object Numeric extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setBigDecimal(parameterIndex, BigDecimal(rawValue).bigDecimal)
     }
   }
-  class Decimal extends ParameterBinder {
+  case object Decimal extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setBigDecimal(parameterIndex, BigDecimal(rawValue).bigDecimal)
     }
   }
-  class Char extends ParameterBinder {
+  case object Char extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setString(parameterIndex, rawValue)
     }
   }
-  class Varchar extends ParameterBinder {
+  case object Varchar extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setString(parameterIndex, rawValue)
     }
   }
-  class LongVarchar extends ParameterBinder {
+  case object LongVarchar extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setString(parameterIndex, rawValue)
     }
   }
-  class Date extends ParameterBinder {
+  case class Date(dateFormatType: DateFormatType) extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
-      ???
+      statement.setDate(
+        parameterIndex,
+        RedshiftDateFormat.forType(dateFormatType).parseSqlDate(rawValue))
     }
   }
-  class Timestamp extends ParameterBinder {
+  case class Timestamp(timeFormatType: TimeFormatType) extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
-      ???
+      statement.setTimestamp(
+        parameterIndex,
+        RedshiftTimeFormat.forType(timeFormatType).parseSqlTimestamp(rawValue))
     }
   }
-  class Boolean extends ParameterBinder {
+  case object Boolean extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setBoolean(parameterIndex, rawValue.toBoolean)
     }
   }
-  class NChar extends ParameterBinder {
+  case object NChar extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setString(parameterIndex, rawValue)
     }
   }
-  class NVarchar extends ParameterBinder {
+  case object NVarchar extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setString(parameterIndex, rawValue)
     }
   }
-  class LongNVarchar extends ParameterBinder {
+  case object LongNVarchar extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setString(parameterIndex, rawValue)
     }
   }
-  class TimestampWithTimezone extends ParameterBinder {
+  case class TimestampWithTimezone(timeFormatType: TimeFormatType) extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
-      ???
+      statement.setTimestamp(
+        parameterIndex,
+        RedshiftTimeFormat.forType(timeFormatType).parseSqlTimestamp(rawValue))
     }
   }
 
-  def apply(jdbcType: JdbcType): ParameterBinder = jdbcType match {
+  def apply(jdbcType: JdbcType, dateFormatType: DateFormatType, timeFormatType: TimeFormatType): ParameterBinder = jdbcType match {
     case JdbcType.Bit => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
-    case JdbcType.TinyInt => new TinyInt
-    case JdbcType.SmallInt => new SmallInt
-    case JdbcType.Integer => new Integer
-    case JdbcType.BigInt => new BigInt
-    case JdbcType.Float => new Float
-    case JdbcType.Real => new Real
-    case JdbcType.Double => new Double
-    case JdbcType.Numeric => new Numeric
-    case JdbcType.Decimal => new Decimal
-    case JdbcType.Char => new Char
-    case JdbcType.Varchar => new Varchar
-    case JdbcType.LongVarchar => new LongVarchar
-    case JdbcType.Date => new Date
+    case JdbcType.TinyInt => TinyInt
+    case JdbcType.SmallInt => SmallInt
+    case JdbcType.Integer => Integer
+    case JdbcType.BigInt => BigInt
+    case JdbcType.Float => Float
+    case JdbcType.Real => Real
+    case JdbcType.Double => Double
+    case JdbcType.Numeric => Numeric
+    case JdbcType.Decimal => Decimal
+    case JdbcType.Char => Char
+    case JdbcType.Varchar => Varchar
+    case JdbcType.LongVarchar => LongVarchar
+    case JdbcType.Date => Date(dateFormatType)
     case JdbcType.Time => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
-    case JdbcType.Timestamp => new Timestamp
+    case JdbcType.Timestamp => Timestamp(timeFormatType)
     case JdbcType.Binary => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
     case JdbcType.VarBinary => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
     case JdbcType.LongVarBinary => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
@@ -134,15 +140,15 @@ object ParameterBinder {
     case JdbcType.Clob => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
     case JdbcType.Ref => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
     case JdbcType.DataLink => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
-    case JdbcType.Boolean => new Boolean
+    case JdbcType.Boolean => Boolean
     case JdbcType.RowId => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
-    case JdbcType.NChar => new NChar
-    case JdbcType.NVarchar => new NVarchar
-    case JdbcType.LongNVarchar => new LongNVarchar
+    case JdbcType.NChar => NChar
+    case JdbcType.NVarchar => NVarchar
+    case JdbcType.LongNVarchar => LongNVarchar
     case JdbcType.NClob => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
     case JdbcType.SqlXml => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
     case JdbcType.RefCursor => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
     case JdbcType.TimeWithTimezone => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
-    case JdbcType.TimestampWithTimezone => new TimestampWithTimezone
+    case JdbcType.TimestampWithTimezone => TimestampWithTimezone(timeFormatType)
   }
 }

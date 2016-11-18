@@ -29,7 +29,7 @@ trait CopyInterceptor extends Interceptor {
       using(connection.prepareStatement(s"insert into ${command.qualifiedTableName} values ($placeHolders)")) { stmt =>
         columns.zip(columnDefinitions).zipWithIndex.foreach { case ((Column(value), ColumnDefinition(_, columnType)), parameterIndex) =>
           value match {
-            case Some(s) => ParameterBinder(columnType).bind(s, stmt, parameterIndex + 1)
+            case Some(s) => ParameterBinder(columnType, command.dateFormatType, command.timeFormatType).bind(s, stmt, parameterIndex + 1)
             case _ => stmt.setObject(parameterIndex + 1, null)
           }
         }

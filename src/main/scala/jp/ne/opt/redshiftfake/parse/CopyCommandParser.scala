@@ -43,15 +43,42 @@ object CopyCommandParser extends RegexParsers {
     "(?i)FORMAT".r.? ~> space.r ~> "(?i)AS".r.? ~> space.r ~> json.? ^^ (_.getOrElse(CopyFormat.Default))
   }
 
+  def timeFormatParser: Parser[TimeFormatType] = {
+    ".*(?i)TIMEFORMAT".r ~> space.r ~> "(?i)AS".r.? ~> space.r ~>
+      ("'auto'" | "'epochsecs'" | "'epochmillisecs'" | "'" ~> """[ \w./:,-]+""".r <~ "'") <~
+      ".*".r ^^ {
+      case "'auto'" => TimeFormatType.Auto
+      case "'epochsecs'" => TimeFormatType.Epochsecs
+      case "'epochmillisecs'" => TimeFormatType.EpochMillisecs
+      case pattern => TimeFormatType.Custom(pattern)
+    }
+  }
+
+  def dateFormatParser: Parser[DateFormatType] = {
+    ".*(?i)DATEFORMAT".r ~> space.r ~> "(?i)AS".r.? ~> space.r ~> ("'auto'" | "'" ~> """[ \w./:,-]+""".r <~ "'") <~ ".*".r ^^ {
+      case "'auto'" => DateFormatType.Auto
+      case pattern => DateFormatType.Custom(pattern)
+    }
+  }
+
   def parse(query: String): Option[CopyCommand] = {
     val result = parse(
       (s"$space(?i)COPY$space".r ~> tableNameParser <~ space.r) ~
         (columnListParser.? <~ space.r) ~
         (s"(?i)FROM$space".r ~> dataSourceParser <~ space.r) ~
         ("(?i)WITH".r.? ~> space.r ~> s"(?i)CREDENTIALS$space".r ~> "(?i)AS".r.? ~> space.r ~> awsAuthArgsParser <~ space.r) ~
-        (copyFormatParser <~ space.r) <~
-        s""".*""".r ^^ { case ~(~(~(~(TableAndSchemaName(schemaName, tableName), columnList), dataSource), auth), format) =>
-        CopyCommand(schemaName, tableName, columnList, dataSource, auth, format)
+        (copyFormatParser <~ space.r) ~
+        s""".*""".r ^^ { case ~(~(~(~(~(TableAndSchemaName(schemaName, tableName), columnList), dataSource), auth), format), dataConversionParameters) =>
+        CopyCommand(
+          schemaName,
+          tableName,
+          columnList,
+          dataSource,
+          auth,
+          format,
+          parse(dateFormatParser, dataConversionParameters).getOrElse(DateFormatType.Default),
+          parse(timeFormatParser, dataConversionParameters).getOrElse(TimeFormatType.Default)
+        )
       },
       query
     )
