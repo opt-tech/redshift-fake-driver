@@ -6,7 +6,7 @@ case class UnloadCommand(
   selectStatement: String,
   destination: S3Location,
   credentials: Credentials,
-  manifestPath: Option[String],
-  delimiter: String,
+  createManifest: Boolean,
+  delimiter: Char,
   addQuotes: Boolean
 )

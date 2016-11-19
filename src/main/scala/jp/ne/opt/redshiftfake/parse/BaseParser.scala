@@ -1,0 +1,24 @@
+package jp.ne.opt.redshiftfake.parse
+
+import jp.ne.opt.redshiftfake.{Credentials, Global}
+import jp.ne.opt.redshiftfake.s3.S3Location
+
+import scala.util.parsing.combinator.RegexParsers
+
+trait BaseParser extends RegexParsers {
+  val identifier = """[_a-zA-Z]\w*"""
+
+  val space = """\s*"""
+
+  val s3LocationParser = Global.s3Endpoint ~> """[\w-]+""".r ~ ("/" ~> """[\w/:%#$&?()~.=+-]+""".r).? ^^ {
+    case ~(bucket, prefix) => S3Location(bucket, prefix.getOrElse(""))
+  }
+
+  val awsAuthArgsParser = {
+    def parserWithKey = ("aws_access_key_id=" ~> """\w+""".r) ~ (";aws_secret_access_key=" ~> """\w+""".r) ^^ {
+      case ~(accessKeyId, secretAccessKey) => Credentials.WithKey(accessKeyId, secretAccessKey)
+    }
+
+    "'" ~> parserWithKey <~ "'"
+  }
+}
