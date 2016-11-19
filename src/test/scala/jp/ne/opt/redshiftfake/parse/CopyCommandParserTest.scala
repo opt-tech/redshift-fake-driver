@@ -101,4 +101,15 @@ class CopyCommandParserTest extends FlatSpec {
     assert(CopyCommandParser.parse(epochmillisecs).map(_.timeFormatType).contains(TimeFormatType.EpochMillisecs))
     assert(CopyCommandParser.parse(custom).map(_.timeFormatType).contains(TimeFormatType.Custom("YYYY/MM/DD HH:MI:SS.SSS")))
   }
+
+  it should "parse manifest" in {
+    val command =
+      s"""
+         |COPY public._foo_42 FROM '${Global.s3Endpoint}some-bucket/path/to/unloaded_manifest'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |MANIFEST;
+         |""".stripMargin
+
+    assert(CopyCommandParser.parse(command).map(_.copyFormat).contains(CopyFormat.Manifest(S3Location("some-bucket", "path/to/unloaded_manifest"))))
+  }
 }

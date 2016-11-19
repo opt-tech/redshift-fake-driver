@@ -59,4 +59,19 @@ class UnloadCommandParserTest extends FlatSpec {
 
     assert(UnloadCommandParser.parse(command).exists(_.addQuotes))
   }
+
+  it should "parse multiple options" in {
+    val command =
+      s"""
+         |UNLOAD ('select * from foo_bar where baz = \'2016-01-01\'') TO '${Global.s3Endpoint}some-bucket/path/to/data'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |MANIFEST
+         |ADDQUOTES
+         |DELIMITER ',';
+         |""".stripMargin
+
+    assert(UnloadCommandParser.parse(command).exists(_.addQuotes))
+    assert(UnloadCommandParser.parse(command).exists(_.createManifest))
+    assert(UnloadCommandParser.parse(command).map(_.delimiter).contains(','))
+  }
 }

@@ -3,11 +3,11 @@ package jp.ne.opt.redshiftfake.parse
 import jp.ne.opt.redshiftfake.UnloadCommand
 
 object UnloadCommandParser extends BaseParser {
-  val addQuotesParser = ".*(?i)ADDQUOTES.*".r
+  val addQuotesParser = s"$any*(?i)ADDQUOTES$any*".r
 
-  val delimiterParser = s".*(?i)DELIMITER$space".r ~> "(?i)AS".r.? ~> space.r ~> "'" ~> """[|,]""".r <~ "'" <~ ".*".r ^^ { s => s.head }
+  val delimiterParser = s"$any*(?i)DELIMITER$space".r ~> "(?i)AS".r.? ~> space.r ~> "'" ~> """[|,]""".r <~ "'" <~ s"$any*".r ^^ { s => s.head }
 
-  val manifestParser = s".*(?i)MANIFEST.*".r
+  val manifestParser = s"$any*(?i)MANIFEST$any*".r
 
   val statementParser = s"$space(?i)UNLOAD$space".r ~> """\('.+'\)""".r <~ space.r ^^ { s =>
     val raw = s.drop(2).dropRight(2)
@@ -23,7 +23,7 @@ object UnloadCommandParser extends BaseParser {
       statementParser ~
         (s"(?i)TO$space".r ~> "'" ~> s3LocationParser <~ "'" <~ space.r) ~
         ("(?i)WITH".r.? ~> space.r ~> s"(?i)CREDENTIALS$space".r ~> "(?i)AS".r.? ~> space.r ~> awsAuthArgsParser <~ space.r) ~
-        s""".*""".r ^^ { case ~(~(~(statement, s3Location), auth), unloadOptions) =>
+        s"$any*".r ^^ { case ~(~(~(statement, s3Location), auth), unloadOptions) =>
         UnloadCommand(
           statement,
           s3Location,

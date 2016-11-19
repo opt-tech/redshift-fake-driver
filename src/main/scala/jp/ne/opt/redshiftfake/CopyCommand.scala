@@ -29,6 +29,7 @@ object CopyDataSource {
 sealed abstract class CopyFormat
 object CopyFormat {
   case object Default extends CopyFormat
+  case class Manifest(manifestLocation: S3Location) extends CopyFormat
   case class Json(jsonpathsLocation: Option[S3Location]) extends CopyFormat
 }
 

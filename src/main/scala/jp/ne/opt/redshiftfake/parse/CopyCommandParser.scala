@@ -9,7 +9,7 @@ object CopyCommandParser extends BaseParser {
     case ~(schemaName, tableName) => TableAndSchemaName(schemaName, tableName)
   }
 
-  val columnListParser = """\(\s*""".r ~> ((identifier.r <~ """\s*,\s*""".r).* ~ identifier.r) <~ """\s*\)""".r ^^ {
+  val columnListParser = "(" ~> space.r ~> ((identifier.r <~ s"""$space,$space""".r).* ~ identifier.r) <~ space.r <~ ")" ^^ {
     case ~(init, last) => init :+ last
   }
 
@@ -25,9 +25,9 @@ object CopyCommandParser extends BaseParser {
   }
 
   val timeFormatParser: Parser[TimeFormatType] = {
-    ".*(?i)TIMEFORMAT".r ~> space.r ~> "(?i)AS".r.? ~> space.r ~>
+    s"$any*(?i)TIMEFORMAT".r ~> space.r ~> "(?i)AS".r.? ~> space.r ~>
       ("'auto'" | "'epochsecs'" | "'epochmillisecs'" | "'" ~> """[ \w./:,-]+""".r <~ "'") <~
-      ".*".r ^^ {
+      s"$any*".r ^^ {
       case "'auto'" => TimeFormatType.Auto
       case "'epochsecs'" => TimeFormatType.Epochsecs
       case "'epochmillisecs'" => TimeFormatType.EpochMillisecs
@@ -36,10 +36,14 @@ object CopyCommandParser extends BaseParser {
   }
 
   val dateFormatParser: Parser[DateFormatType] = {
-    ".*(?i)DATEFORMAT".r ~> space.r ~> "(?i)AS".r.? ~> space.r ~> ("'auto'" | "'" ~> """[ \w./:,-]+""".r <~ "'") <~ ".*".r ^^ {
+    s"$any*(?i)DATEFORMAT".r ~> space.r ~> "(?i)AS".r.? ~> space.r ~> ("'auto'" | "'" ~> """[ \w./:,-]+""".r <~ "'") <~ s"$any*".r ^^ {
       case "'auto'" => DateFormatType.Auto
       case pattern => DateFormatType.Custom(pattern)
     }
+  }
+
+  val manifestParser = {
+    s"$any*(?i)MANIFEST$any*".r
   }
 
   def parse(query: String): Option[CopyCommand] = {
@@ -49,8 +53,8 @@ object CopyCommandParser extends BaseParser {
         (s"(?i)FROM$space".r ~> dataSourceParser <~ space.r) ~
         ("(?i)WITH".r.? ~> space.r ~> s"(?i)CREDENTIALS$space".r ~> "(?i)AS".r.? ~> space.r ~> awsAuthArgsParser <~ space.r) ~
         (copyFormatParser <~ space.r) ~
-        s""".*""".r ^^ { case ~(~(~(~(~(TableAndSchemaName(schemaName, tableName), columnList), dataSource), auth), format), dataConversionParameters) =>
-        CopyCommand(
+        s"$any*".r ^^ { case ~(~(~(~(~(TableAndSchemaName(schemaName, tableName), columnList), dataSource), auth), format), dataConversionParameters) =>
+        val command = CopyCommand(
           schemaName,
           tableName,
           columnList,
@@ -60,6 +64,17 @@ object CopyCommandParser extends BaseParser {
           parse(dateFormatParser, dataConversionParameters).getOrElse(DateFormatType.Default),
           parse(timeFormatParser, dataConversionParameters).getOrElse(TimeFormatType.Default)
         )
+
+        // handle manifest
+        if (parse(manifestParser, dataConversionParameters).successful) {
+          dataSource match {
+            case CopyDataSource.S3(location) => command.copy(copyFormat = CopyFormat.Manifest(location))
+            case _ => command
+          }
+        } else {
+          command
+        }
+
       },
       query
     )
