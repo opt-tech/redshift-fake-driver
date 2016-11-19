@@ -1,9 +1,12 @@
 package jp.ne.opt.redshiftfake.s3
 
+import java.io.ByteArrayInputStream
+
 import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.regions.ServiceAbbreviations
 import com.amazonaws.services.s3.{S3ClientOptions, AmazonS3Client}
-import com.amazonaws.services.s3.model.{GetObjectRequest, ObjectListing, S3ObjectSummary}
-import jp.ne.opt.redshiftfake.Credentials
+import com.amazonaws.services.s3.model._
+import jp.ne.opt.redshiftfake.{Global, Credentials}
 import jp.ne.opt.redshiftfake.util.Loan._
 
 import scala.annotation.tailrec
@@ -38,10 +41,28 @@ class S3ServiceImpl(endpoint: String) extends S3Service {
       case _ =>
         new AmazonS3Client()
     }
-    client.setS3ClientOptions(
-      S3ClientOptions.builder().setPathStyleAccess(true).disableChunkedEncoding().build()
-    )
-    client.setEndpoint(endpoint)
+
+    client.setS3ClientOptions({
+      val options = new S3ClientOptions
+      options.setPathStyleAccess(true)
+
+      // for compatibility
+      val setChunkedEncodingDisabled = "setChunkedEncodingDisabled"
+      val clazz = classOf[S3ClientOptions]
+      if (clazz.getMethods.map(_.getName).contains(setChunkedEncodingDisabled)) {
+        clazz.getMethod(setChunkedEncodingDisabled, classOf[Boolean]).invoke(options, java.lang.Boolean.valueOf(true))
+      }
+
+      options.setPathStyleAccess(true)
+      options
+    })
+
+    client.setRegion(Global.region)
+    if (endpoint != "s3://") {
+      client.setEndpoint(endpoint)
+    } else {
+      client.setEndpoint(Global.region.getServiceEndpoint(ServiceAbbreviations.S3))
+    }
     client
   }
 
@@ -68,6 +89,12 @@ class S3ServiceImpl(endpoint: String) extends S3Service {
   }
 
   def uploadString(location: S3Location, content: String)(credentials: Credentials): Unit = {
-    mkClient(credentials).putObject(location.bucket, location.prefix, content)
+    val bytes = content.getBytes("UTF-8")
+    val stream = new ByteArrayInputStream(bytes)
+    val metadata = new ObjectMetadata()
+    metadata.setContentLength(bytes.length)
+
+    val request = new PutObjectRequest(location.bucket, location.prefix, stream, metadata)
+    mkClient(credentials).putObject(request)
   }
 }
