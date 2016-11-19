@@ -84,7 +84,11 @@ object ParameterBinder {
   }
   case object Boolean extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
-      statement.setBoolean(parameterIndex, rawValue.toBoolean)
+      statement.setBoolean(parameterIndex, rawValue match {
+        case "t" => true
+        case "f" => false
+        case _ => rawValue.toBoolean
+      })
     }
   }
   case object NChar extends ParameterBinder {
