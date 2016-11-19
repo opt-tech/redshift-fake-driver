@@ -3,6 +3,7 @@ package jp.ne.opt.redshiftfake
 import java.sql.Connection
 
 import jp.ne.opt.redshiftfake.s3.S3Service
+import jp.ne.opt.redshiftfake.write.Writer
 import util.Loan.using
 
 trait Interceptor {
@@ -35,6 +36,31 @@ trait CopyInterceptor extends Interceptor {
         }
 
         stmt.executeUpdate()
+      }
+    }
+  }
+}
+
+trait UnloadInterceptor extends Interceptor {
+
+  def executeUnload(connection: Connection, command: UnloadCommand, s3Service: S3Service): Unit = {
+
+    using(connection.createStatement()) { stmt =>
+      using(stmt.executeQuery(command.selectStatement)) { resultSet =>
+        val columnCount = resultSet.getMetaData.getColumnCount
+        val extractors = (1 to columnCount).map { index =>
+          val jdbcType = JdbcType.valueOf(resultSet.getMetaData.getColumnType(index))
+          Extractor(jdbcType)
+        }
+
+        val rows = Iterator.continually(resultSet).takeWhile(_.next()).map { rs =>
+          val row = extractors.zipWithIndex.map { case (extractor, i) =>
+            Column(extractor.extractOpt(rs, i + 1))
+          }
+          Row(row)
+        }
+
+        new Writer(command, s3Service).write(rows.toList)
       }
     }
   }

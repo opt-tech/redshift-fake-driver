@@ -5,8 +5,8 @@ import java.{util => jutil}
 import java.util.Properties
 import java.util.concurrent.Executor
 
-import jp.ne.opt.redshiftfake.FakePreparedStatement.{FakeAsIsPreparedStatement, FakeCopyPreparedStatement}
-import jp.ne.opt.redshiftfake.parse.CopyCommandParser
+import jp.ne.opt.redshiftfake.FakePreparedStatement.{FakeUnloadPreparedStatement, FakeAsIsPreparedStatement, FakeCopyPreparedStatement}
+import jp.ne.opt.redshiftfake.parse.{UnloadCommandParser, CopyCommandParser}
 import jp.ne.opt.redshiftfake.s3.S3Service
 
 class FakeConnection(underlying: Connection, s3Service: S3Service) extends Connection {
@@ -27,36 +27,61 @@ class FakeConnection(underlying: Connection, s3Service: S3Service) extends Conne
   //========================
   // Intercept PreparedStatement
   //========================
-  def prepareStatement(sql: String): PreparedStatement = CopyCommandParser.parse(sql) match {
-    case Some(command) => new FakeCopyPreparedStatement(
-      underlying.prepareStatement(dummyQuery), command, underlying, PreparedStatementType.Plain, s3Service)
-    case _ => new FakeAsIsPreparedStatement(underlying.prepareStatement(sql))
+  def prepareStatement(sql: String): PreparedStatement = {
+    CopyCommandParser.parse(sql).map { command =>
+      new FakeCopyPreparedStatement(
+        underlying.prepareStatement(dummyQuery), command, underlying, PreparedStatementType.Plain, s3Service)
+    }.orElse(UnloadCommandParser.parse(sql).map { command =>
+      new FakeUnloadPreparedStatement(
+        underlying.prepareStatement(dummyQuery), command, underlying, PreparedStatementType.Plain, s3Service)
+    }).getOrElse(new FakeAsIsPreparedStatement(underlying.prepareStatement(sql)))
   }
-  def prepareStatement(sql: String, columnNames: Array[String]): PreparedStatement = CopyCommandParser.parse(sql) match {
-    case Some(command) => new FakeCopyPreparedStatement(
-      underlying.prepareStatement(dummyQuery), command, underlying, PreparedStatementType.ColumnNames(columnNames), s3Service)
-    case _ => new FakeAsIsPreparedStatement(underlying.prepareStatement(sql, columnNames))
+  def prepareStatement(sql: String, columnNames: Array[String]): PreparedStatement = {
+    CopyCommandParser.parse(sql).map { command =>
+      new FakeCopyPreparedStatement(
+        underlying.prepareStatement(dummyQuery), command, underlying, PreparedStatementType.ColumnNames(columnNames), s3Service)
+    }.orElse(UnloadCommandParser.parse(sql).map { command =>
+      new FakeUnloadPreparedStatement(
+        underlying.prepareStatement(dummyQuery), command, underlying, PreparedStatementType.ColumnNames(columnNames), s3Service)
+    }).getOrElse(new FakeAsIsPreparedStatement(underlying.prepareStatement(sql, columnNames)))
   }
-  def prepareStatement(sql: String, resultSetType: Int, resultSetConcurrency: Int): PreparedStatement = CopyCommandParser.parse(sql) match {
-    case Some(command) => new FakeCopyPreparedStatement(
-      underlying.prepareStatement(dummyQuery), command, underlying,
-      PreparedStatementType.ResultSetTypeConcurrency(resultSetType, resultSetConcurrency), s3Service)
-    case _ => new FakeAsIsPreparedStatement(underlying.prepareStatement(sql, resultSetType, resultSetConcurrency))
+  def prepareStatement(sql: String, resultSetType: Int, resultSetConcurrency: Int): PreparedStatement = {
+    CopyCommandParser.parse(sql).map { command =>
+      new FakeCopyPreparedStatement(
+        underlying.prepareStatement(dummyQuery), command, underlying,
+        PreparedStatementType.ResultSetTypeConcurrency(resultSetType, resultSetConcurrency), s3Service)
+    }.orElse(UnloadCommandParser.parse(sql).map { command =>
+      new FakeUnloadPreparedStatement(
+        underlying.prepareStatement(dummyQuery), command, underlying,
+        PreparedStatementType.ResultSetTypeConcurrency(resultSetType, resultSetConcurrency), s3Service)
+    }).getOrElse(new FakeAsIsPreparedStatement(underlying.prepareStatement(sql, resultSetType, resultSetConcurrency)))
   }
-  def prepareStatement(sql: String, resultSetType: Int, resultSetConcurrency: Int, resultSetHoldability: Int): PreparedStatement = CopyCommandParser.parse(sql) match {
-    case Some(command) => new FakeCopyPreparedStatement(underlying.prepareStatement(dummyQuery), command, underlying,
-      PreparedStatementType.ResultSetTypeConcurrencyHoldability(resultSetType, resultSetConcurrency, resultSetHoldability), s3Service)
-    case _ => new FakeAsIsPreparedStatement(underlying.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability))
+  def prepareStatement(sql: String, resultSetType: Int, resultSetConcurrency: Int, resultSetHoldability: Int): PreparedStatement = {
+    CopyCommandParser.parse(sql).map { command =>
+      new FakeCopyPreparedStatement(underlying.prepareStatement(dummyQuery), command, underlying,
+        PreparedStatementType.ResultSetTypeConcurrencyHoldability(resultSetType, resultSetConcurrency, resultSetHoldability), s3Service)
+    }.orElse(UnloadCommandParser.parse(sql).map { command =>
+      new FakeUnloadPreparedStatement(underlying.prepareStatement(dummyQuery), command, underlying,
+        PreparedStatementType.ResultSetTypeConcurrencyHoldability(resultSetType, resultSetConcurrency, resultSetHoldability), s3Service)
+    }).getOrElse(new FakeAsIsPreparedStatement(underlying.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability)))
   }
-  def prepareStatement(sql: String, autoGeneratedKeys: Int): PreparedStatement = CopyCommandParser.parse(sql) match {
-    case Some(command) => new FakeCopyPreparedStatement(underlying.prepareStatement(dummyQuery), command, underlying,
-      PreparedStatementType.AutoGeneratedKeys(autoGeneratedKeys), s3Service)
-    case _ => new FakeAsIsPreparedStatement(underlying.prepareStatement(sql, autoGeneratedKeys))
+  def prepareStatement(sql: String, autoGeneratedKeys: Int): PreparedStatement = {
+    CopyCommandParser.parse(sql).map { command =>
+      new FakeCopyPreparedStatement(underlying.prepareStatement(dummyQuery), command, underlying,
+        PreparedStatementType.AutoGeneratedKeys(autoGeneratedKeys), s3Service)
+    }.orElse(UnloadCommandParser.parse(sql).map { command =>
+      new FakeUnloadPreparedStatement(underlying.prepareStatement(dummyQuery), command, underlying,
+        PreparedStatementType.AutoGeneratedKeys(autoGeneratedKeys), s3Service)
+    }).getOrElse(new FakeAsIsPreparedStatement(underlying.prepareStatement(sql, autoGeneratedKeys)))
   }
-  def prepareStatement(sql: String, columnIndexes: Array[Int]): PreparedStatement = CopyCommandParser.parse(sql) match {
-    case Some(command) => new FakeCopyPreparedStatement(underlying.prepareStatement(dummyQuery), command, underlying,
-      PreparedStatementType.ColumnIndexes(columnIndexes), s3Service)
-    case _ => new FakeAsIsPreparedStatement(underlying.prepareStatement(sql, columnIndexes))
+  def prepareStatement(sql: String, columnIndexes: Array[Int]): PreparedStatement = {
+    CopyCommandParser.parse(sql).map { command =>
+      new FakeCopyPreparedStatement(underlying.prepareStatement(dummyQuery), command, underlying,
+        PreparedStatementType.ColumnIndexes(columnIndexes), s3Service)
+    }.orElse(UnloadCommandParser.parse(sql).map { command =>
+      new FakeUnloadPreparedStatement(underlying.prepareStatement(dummyQuery), command, underlying,
+        PreparedStatementType.ColumnIndexes(columnIndexes), s3Service)
+    }).getOrElse(new FakeAsIsPreparedStatement(underlying.prepareStatement(sql, columnIndexes)))
   }
 
   //========================

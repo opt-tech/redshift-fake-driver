@@ -166,4 +166,31 @@ object FakePreparedStatement {
       0
     }
   }
+
+  /**
+   * Hold and execute UNLOAD command.
+   */
+  class FakeUnloadPreparedStatement(
+    underlying: PreparedStatement,
+    command: UnloadCommand,
+    connection: Connection,
+    statementType: PreparedStatementType,
+    s3Service: S3Service
+  ) extends FakePreparedStatement(underlying) with UnloadInterceptor {
+
+    def execute(): Boolean = {
+      executeUnload(connection, command, s3Service)
+      false
+    }
+
+    def executeQuery(): ResultSet = {
+      executeUnload(connection, command, s3Service)
+      underlying.executeQuery()
+    }
+
+    def executeUpdate(): Int = {
+      executeUnload(connection, command, s3Service)
+      0
+    }
+  }
 }

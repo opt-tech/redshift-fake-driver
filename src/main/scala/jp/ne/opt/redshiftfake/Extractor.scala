@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat
 
 sealed abstract class Extractor {
   def extract(resultSet: ResultSet, columnIndex: Int): String
+  def extractOpt(resultSet: ResultSet, columnIndex: Int): Option[String] =
+    if (resultSet.getObject(columnIndex) == null) None else Some(extract(resultSet, columnIndex))
 }
 
 object Extractor {

@@ -2,7 +2,7 @@ package jp.ne.opt.redshiftfake
 
 import java.sql.{ResultSet, SQLWarning, Connection, Statement}
 
-import jp.ne.opt.redshiftfake.parse.CopyCommandParser
+import jp.ne.opt.redshiftfake.parse.{UnloadCommandParser, CopyCommandParser}
 import jp.ne.opt.redshiftfake.s3.S3Service
 
 /**
@@ -16,13 +16,13 @@ object StatementType {
 }
 
 /**
- * Base fake Statement.
+ * Fake Statement.
  */
 class FakeStatement(
   underlying: Statement,
   connection: Connection,
   statementType: StatementType,
-  s3Service: S3Service) extends Statement with CopyInterceptor {
+  s3Service: S3Service) extends Statement with CopyInterceptor with UnloadInterceptor {
 
   def setMaxFieldSize(max: Int): Unit = underlying.setMaxFieldSize(max)
   def getMoreResults: Boolean = underlying.getMoreResults
@@ -98,12 +98,12 @@ class FakeStatement(
   }
 
   private[this] def switchExecute[A](sql: String)(default: => A, switched: => A): A = {
-    CopyCommandParser.parse(sql) match {
-      case Some(commandy) =>
-        executeCopy(connection, commandy, s3Service)
-        switched
-      case _ =>
-        default
-    }
+    CopyCommandParser.parse(sql).map { command =>
+      executeCopy(connection, command, s3Service)
+      switched
+    }.orElse(UnloadCommandParser.parse(sql).map { command =>
+      executeUnload(connection, command, s3Service)
+      switched
+    }).getOrElse(default)
   }
 }
