@@ -37,9 +37,9 @@ class Writer(unloadCommand: UnloadCommand, s3Service: S3Service) {
       val manifest = s"""{"entries":[{"url":"$resultUrl"}]}"""
       val manifestKey = s"${unloadCommand.destination.prefix}manifest"
 
-      s3Service.uploadString(unloadCommand.destination.copy(prefix = manifestKey), manifest)
+      s3Service.uploadString(unloadCommand.destination.copy(prefix = manifestKey), manifest)(unloadCommand.credentials)
     }
 
-    s3Service.uploadString(unloadCommand.destination.copy(prefix = resultKey), result)
+    s3Service.uploadString(unloadCommand.destination.copy(prefix = resultKey), result)(unloadCommand.credentials)
   }
 }

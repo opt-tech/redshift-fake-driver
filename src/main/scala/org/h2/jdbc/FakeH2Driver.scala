@@ -12,8 +12,8 @@ class FakeH2Driver extends Driver {
 
   override def connect(url: String, info: Properties): Connection =
     new FakeConnection(
-      new JdbcConnection(url.replaceFirst(urlPrefix, "jdbc:h2"), info),
-      new S3ServiceImpl(Global.s3Endpoint, Global.s3Credentials)
+      DriverManager.getConnection(url.replaceFirst(urlPrefix, "jdbc:h2"), info),
+      new S3ServiceImpl(Global.s3Endpoint)
     )
 
   override def acceptsURL(url: String): Boolean = url.startsWith(urlPrefix)

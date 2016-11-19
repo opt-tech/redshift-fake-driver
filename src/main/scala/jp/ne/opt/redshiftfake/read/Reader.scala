@@ -13,16 +13,16 @@ class Reader(copyCommand: CopyCommand, columnDefinitions: Seq[ColumnDefinition],
 
     val contents = (copyCommand.copyFormat, copyCommand.dataSource) match {
       case (CopyFormat.Manifest(location), _) =>
-        val rawManifest = s3Service.downloadAsString(location)
+        val rawManifest = s3Service.downloadAsString(location)(copyCommand.credentials)
         val manifest = new Manifest(rawManifest)
-        manifest.files.map(s3Service.downloadAsString)
+        manifest.files.map(s3Service.downloadAsString(_)(copyCommand.credentials))
       case (_, CopyDataSource.S3(location)) =>
         downloadAllAsStringFromS3(location)
     }
 
     copyCommand.copyFormat match {
       case CopyFormat.Json(Some(jsonpathsLocation)) =>
-        val rawJsonpaths = s3Service.downloadAsString(S3Location(jsonpathsLocation.bucket, jsonpathsLocation.prefix))
+        val rawJsonpaths = s3Service.downloadAsString(S3Location(jsonpathsLocation.bucket, jsonpathsLocation.prefix))(copyCommand.credentials)
         val jsonpaths = new Jsonpaths(rawJsonpaths)
 
         (for {
@@ -48,9 +48,9 @@ class Reader(copyCommand: CopyCommand, columnDefinitions: Seq[ColumnDefinition],
   }
 
   private[this] def downloadAllAsStringFromS3(location: S3Location): Seq[String] = {
-    val summaries = s3Service.lsRecurse(location)
+    val summaries = s3Service.lsRecurse(location)(copyCommand.credentials)
     summaries.map { summary =>
-      s3Service.downloadAsString(S3Location(location.bucket, summary.getKey))
+      s3Service.downloadAsString(S3Location(location.bucket, summary.getKey))(copyCommand.credentials)
     }
   }
 }
