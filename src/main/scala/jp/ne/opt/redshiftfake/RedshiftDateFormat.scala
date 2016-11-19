@@ -13,9 +13,9 @@ sealed abstract class RedshiftDateFormat {
 }
 object RedshiftDateFormat {
   case class FixedDateFormat(pattern: String) extends RedshiftDateFormat {
-    private[this] val sdf = new SimpleDateFormat(pattern)
-
     def parseSqlDate(string: String): java.sql.Date = {
+      val sdf = new SimpleDateFormat(pattern)
+
       val millis = sdf.parse(string).getTime
       val cal = Calendar.getInstance()
       cal.setTimeInMillis(millis)
@@ -51,9 +51,8 @@ sealed abstract class RedshiftTimeFormat {
 }
 object RedshiftTimeFormat {
   case class FixedTimeFormat(pattern: String) extends RedshiftTimeFormat {
-    private[this] val sdf = new SimpleDateFormat(pattern)
-
     def parseSqlTimestamp(string: String): Timestamp = {
+      val sdf = new SimpleDateFormat(pattern)
       new Timestamp(sdf.parse(string).getTime)
     }
   }
@@ -69,7 +68,7 @@ object RedshiftTimeFormat {
       def parseSqlTimestamp(string: String): Timestamp = new Timestamp(1000L * string.toLong)
     }
     case TimeFormatType.EpochMillisecs => new RedshiftTimeFormat {
-      def parseSqlTimestamp(string: String): Timestamp =  new Timestamp(string.toLong)
+      def parseSqlTimestamp(string: String): Timestamp = new Timestamp(string.toLong)
     }
     case TimeFormatType.Auto =>
       // FIXME: incomplete implementation
@@ -101,7 +100,7 @@ object ParseUtil {
       ("HH", "HH"),
       ("MI", "mm"),
       ("SS", "ss.SSS"),
-      ("OF", "Z")
+      ("OF", "'Z'")
     )
 
     def replaceLoop(current: String, mappings: Seq[(String, String)]): String = mappings match {
