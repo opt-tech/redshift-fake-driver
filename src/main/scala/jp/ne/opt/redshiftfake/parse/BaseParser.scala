@@ -16,6 +16,7 @@ trait BaseParser extends RegexParsers {
     case ~(bucket, prefix) => S3Location(bucket, prefix.getOrElse(""))
   }
 
+  // TODO: support other auth types
   val awsAuthArgsParser = {
     def parserWithKey = ("aws_access_key_id=" ~> """[\w/+=]+""".r) ~ (";aws_secret_access_key=" ~> """[\w/+=]+""".r) ^^ {
       case ~(accessKeyId, secretAccessKey) => Credentials.WithKey(accessKeyId, secretAccessKey)
