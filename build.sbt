@@ -9,9 +9,11 @@ crossScalaVersions := Seq(scala210, "2.11.8")
 
 name := "redshift-fake-driver"
 
+licenses += "Apache 2" -> url("https://raw.githubusercontent.com/opt-tech/redshift-fake-driver/master/LICENSE")
+
 organization := "jp.ne.opt"
 
-version := "0.0.1-SNAPSHOT"
+version := "1.0.0-SNAPSHOT"
 
 scalacOptions ++= Seq(
   "-deprecation",
