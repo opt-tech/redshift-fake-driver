@@ -151,8 +151,10 @@ object ParameterBinder {
     case JdbcType.LongNVarchar => LongNVarchar
     case JdbcType.NClob => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
     case JdbcType.SqlXml => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
-    case JdbcType.RefCursor => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
-    case JdbcType.TimeWithTimezone => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
-    case JdbcType.TimestampWithTimezone => TimestampWithTimezone(timeFormatType)
+
+    // since 4.2
+    // case JdbcType.RefCursor => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
+    // case JdbcType.TimeWithTimezone => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
+    // case JdbcType.TimestampWithTimezone => TimestampWithTimezone(timeFormatType)
   }
 }

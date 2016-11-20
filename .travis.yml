@@ -10,4 +10,4 @@ jdk:
 script:
   - gem install fakes3
   - fakes3 -r ./fakes3_root -p 9444 &
-  - sbt -DawsS3Endpoint="http://localhost:9444/" test
+  - sbt -Dfake.awsS3Endpoint="http://localhost:9444/" test

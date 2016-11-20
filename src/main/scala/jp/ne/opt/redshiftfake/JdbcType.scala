@@ -43,9 +43,11 @@ object JdbcType {
   case object LongNVarchar extends JdbcType(LONGNVARCHAR)
   case object NClob extends JdbcType(NCLOB)
   case object SqlXml extends JdbcType(SQLXML)
-  case object RefCursor extends JdbcType(REF_CURSOR)
-  case object TimeWithTimezone extends JdbcType(TIME_WITH_TIMEZONE)
-  case object TimestampWithTimezone extends JdbcType(TIMESTAMP_WITH_TIMEZONE)
+
+  // since 4.2
+  // case object RefCursor extends JdbcType(REF_CURSOR)
+  // case object TimeWithTimezone extends JdbcType(TIME_WITH_TIMEZONE)
+  // case object TimestampWithTimezone extends JdbcType(TIMESTAMP_WITH_TIMEZONE)
 
   val values = Set(
     Bit,
@@ -83,10 +85,12 @@ object JdbcType {
     NVarchar,
     LongNVarchar,
     NClob,
-    SqlXml,
-    RefCursor,
-    TimeWithTimezone,
-    TimestampWithTimezone
+    SqlXml
+
+    // since 4.2
+    // RefCursor,
+    // TimeWithTimezone,
+    // TimestampWithTimezone
   )
 
   private[this] val valueMap = values.map(v => (v.rawType, v)).toMap
