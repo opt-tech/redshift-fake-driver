@@ -9,7 +9,7 @@ object CopyCommandParser extends BaseParser {
     case ~(schemaName, tableName) => TableAndSchemaName(schemaName, tableName)
   }
 
-  val columnListParser = "(" ~> space.r ~> ((identifier.r <~ s"""$space,$space""".r).* ~ identifier.r) <~ space.r <~ ")" ^^ {
+  val columnListParser = "(" ~> ((identifier.r <~ s",$space".r).* ~ identifier.r) <~ ")" ^^ {
     case ~(init, last) => init :+ last
   }
 
@@ -19,13 +19,13 @@ object CopyCommandParser extends BaseParser {
   }
 
   val copyFormatParser = {
-    def json = ("(?i)JSON".r ~> space.r ~> "(?i)AS".r.? ~> space.r ~> ("'" ~> s3LocationParser <~ "'").?) ^^ CopyFormat.Json
+    def json = ("(?i)JSON".r ~> "(?i)AS".r.? ~> ("'" ~> s3LocationParser <~ "'").?) ^^ CopyFormat.Json
 
-    "(?i)FORMAT".r.? ~> space.r ~> "(?i)AS".r.? ~> space.r ~> json.? ^^ (_.getOrElse(CopyFormat.Default))
+    "(?i)FORMAT".r.? ~> "(?i)AS".r.? ~> json.? ^^ (_.getOrElse(CopyFormat.Default))
   }
 
   val timeFormatParser: Parser[TimeFormatType] = {
-    s"$any*(?i)TIMEFORMAT".r ~> space.r ~> "(?i)AS".r.? ~> space.r ~>
+    s"$any*(?i)TIMEFORMAT".r ~> "(?i)AS".r.? ~>
       ("'auto'" | "'epochsecs'" | "'epochmillisecs'" | "'" ~> """[ \w./:,-]+""".r <~ "'") <~
       s"$any*".r ^^ {
       case "'auto'" => TimeFormatType.Auto
@@ -36,7 +36,7 @@ object CopyCommandParser extends BaseParser {
   }
 
   val dateFormatParser: Parser[DateFormatType] = {
-    s"$any*(?i)DATEFORMAT".r ~> space.r ~> "(?i)AS".r.? ~> space.r ~> ("'auto'" | "'" ~> """[ \w./:,-]+""".r <~ "'") <~ s"$any*".r ^^ {
+    s"$any*(?i)DATEFORMAT".r ~> "(?i)AS".r.? ~> ("'auto'" | "'" ~> """[ \w./:,-]+""".r <~ "'") <~ s"$any*".r ^^ {
       case "'auto'" => DateFormatType.Auto
       case pattern => DateFormatType.Custom(pattern)
     }
@@ -48,11 +48,11 @@ object CopyCommandParser extends BaseParser {
 
   def parse(query: String): Option[CopyCommand] = {
     val result = parse(
-      (s"$space(?i)COPY$space".r ~> tableNameParser <~ space.r) ~
-        (columnListParser.? <~ space.r) ~
-        (s"(?i)FROM$space".r ~> dataSourceParser <~ space.r) ~
-        ("(?i)WITH".r.? ~> space.r ~> s"(?i)CREDENTIALS$space".r ~> "(?i)AS".r.? ~> space.r ~> awsAuthArgsParser <~ space.r) ~
-        (copyFormatParser <~ space.r) ~
+      ("(?i)COPY".r ~> tableNameParser) ~
+        columnListParser.? ~
+        ("(?i)FROM".r ~> dataSourceParser) ~
+        ("(?i)WITH".r.? ~> "(?i)CREDENTIALS".r ~> "(?i)AS".r.? ~> awsAuthArgsParser) ~
+        copyFormatParser ~
         s"$any*".r ^^ { case ~(~(~(~(~(TableAndSchemaName(schemaName, tableName), columnList), dataSource), auth), format), dataConversionParameters) =>
         val command = CopyCommand(
           schemaName,
