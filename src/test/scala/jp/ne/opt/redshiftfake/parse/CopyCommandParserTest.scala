@@ -26,7 +26,7 @@ class CopyCommandParserTest extends FlatSpec {
       timeFormatType = TimeFormatType.Default
     )
 
-    assert(CopyCommandParser.parse(command).contains(expected))
+    assert(CopyCommandParser.parse(command) == Some(expected))
   }
 
   it should "parse JSON format" in {
@@ -44,8 +44,8 @@ class CopyCommandParserTest extends FlatSpec {
         |JSON '${Global.s3Endpoint}some-bucket/path/to/jsonpaths.txt';
         |""".stripMargin
 
-    assert(CopyCommandParser.parse(command).map(_.copyFormat).contains(CopyFormat.Json(None)))
-    assert(CopyCommandParser.parse(commandWithJsonpath).map(_.copyFormat).contains(CopyFormat.Json(Some(S3Location("some-bucket", "path/to/jsonpaths.txt")))))
+    assert(CopyCommandParser.parse(command).map(_.copyFormat) == Some(CopyFormat.Json(None)))
+    assert(CopyCommandParser.parse(commandWithJsonpath).map(_.copyFormat) == Some(CopyFormat.Json(Some(S3Location("some-bucket", "path/to/jsonpaths.txt")))))
   }
 
   it should "parse date format" in {
@@ -63,8 +63,8 @@ class CopyCommandParserTest extends FlatSpec {
          |DATEFORMAT 'YYYY/MM/DD';
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(auto).map(_.dateFormatType).contains(DateFormatType.Auto))
-    assert(CopyCommandParser.parse(custom).map(_.dateFormatType).contains(DateFormatType.Custom("YYYY/MM/DD")))
+    assert(CopyCommandParser.parse(auto).map(_.dateFormatType) == Some(DateFormatType.Auto))
+    assert(CopyCommandParser.parse(custom).map(_.dateFormatType) == Some(DateFormatType.Custom("YYYY/MM/DD")))
   }
 
   it should "parse time format" in {
@@ -96,10 +96,10 @@ class CopyCommandParserTest extends FlatSpec {
          |TIMEFORMAT 'YYYY/MM/DD HH:MI:SS.SSS';
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(auto).map(_.timeFormatType).contains(TimeFormatType.Auto))
-    assert(CopyCommandParser.parse(epochsecs).map(_.timeFormatType).contains(TimeFormatType.Epochsecs))
-    assert(CopyCommandParser.parse(epochmillisecs).map(_.timeFormatType).contains(TimeFormatType.EpochMillisecs))
-    assert(CopyCommandParser.parse(custom).map(_.timeFormatType).contains(TimeFormatType.Custom("YYYY/MM/DD HH:MI:SS.SSS")))
+    assert(CopyCommandParser.parse(auto).map(_.timeFormatType) == Some(TimeFormatType.Auto))
+    assert(CopyCommandParser.parse(epochsecs).map(_.timeFormatType) == Some(TimeFormatType.Epochsecs))
+    assert(CopyCommandParser.parse(epochmillisecs).map(_.timeFormatType) == Some(TimeFormatType.EpochMillisecs))
+    assert(CopyCommandParser.parse(custom).map(_.timeFormatType) == Some(TimeFormatType.Custom("YYYY/MM/DD HH:MI:SS.SSS")))
   }
 
   it should "parse manifest" in {
@@ -110,6 +110,6 @@ class CopyCommandParserTest extends FlatSpec {
          |MANIFEST;
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(command).map(_.copyFormat).contains(CopyFormat.Manifest(S3Location("some-bucket", "path/to/unloaded_manifest"))))
+    assert(CopyCommandParser.parse(command).map(_.copyFormat) == Some(CopyFormat.Manifest(S3Location("some-bucket", "path/to/unloaded_manifest"))))
   }
 }
