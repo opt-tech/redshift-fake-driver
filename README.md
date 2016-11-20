@@ -71,3 +71,5 @@ You should configure Redshift connection as follows only in local environment.
   - if you started a `fake-s3` server on `http://localhost:9444/`, system property will be `-Dfake.awsS3Endpoint="http://localhost:9444/"`. (trailing slash is needed)
 
 ## License
+
+Apache 2.0
