@@ -7,7 +7,15 @@ sealed abstract class ParameterBinder {
 }
 
 object ParameterBinder {
-
+  case object Bit extends ParameterBinder {
+    def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
+      statement.setBoolean(parameterIndex, rawValue match {
+        case "t" | "1" => true
+        case "f" | "0" => false
+        case _ => rawValue.toBoolean
+      })
+    }
+  }
   case object TinyInt extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
       statement.setShort(parameterIndex, BigDecimal(rawValue).toShort)
@@ -84,11 +92,7 @@ object ParameterBinder {
   }
   case object Boolean extends ParameterBinder {
     def bind(rawValue: String, statement: PreparedStatement, parameterIndex: Int) = {
-      statement.setBoolean(parameterIndex, rawValue match {
-        case "t" => true
-        case "f" => false
-        case _ => rawValue.toBoolean
-      })
+      Bit.bind(rawValue, statement, parameterIndex)
     }
   }
   case object NChar extends ParameterBinder {
@@ -115,7 +119,7 @@ object ParameterBinder {
   }
 
   def apply(jdbcType: JdbcType, dateFormatType: DateFormatType, timeFormatType: TimeFormatType): ParameterBinder = jdbcType match {
-    case JdbcType.Bit => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
+    case JdbcType.Bit => Bit
     case JdbcType.TinyInt => TinyInt
     case JdbcType.SmallInt => SmallInt
     case JdbcType.Integer => Integer

@@ -10,7 +10,9 @@ sealed abstract class Extractor {
 }
 
 object Extractor {
-
+  case object Bit extends Extractor {
+    def extract(resultSet: ResultSet, columnIndex: Int) = if (resultSet.getBoolean(columnIndex)) "t" else "f"
+  }
   case object TinyInt extends Extractor {
     def extract(resultSet: ResultSet, columnIndex: Int) = resultSet.getShort(columnIndex).toString
   }
@@ -60,7 +62,7 @@ object Extractor {
     }
   }
   case object Boolean extends Extractor {
-    def extract(resultSet: ResultSet, columnIndex: Int) = if (resultSet.getBoolean(columnIndex)) "t" else "f"
+    def extract(resultSet: ResultSet, columnIndex: Int) = Bit.extract(resultSet, columnIndex)
   }
   case object NChar extends Extractor {
     def extract(resultSet: ResultSet, columnIndex: Int) = resultSet.getString(columnIndex)
@@ -79,7 +81,7 @@ object Extractor {
   }
 
   def apply(jdbcType: JdbcType): Extractor = jdbcType match {
-    case JdbcType.Bit => throw new UnsupportedOperationException(s"Redshift does not support $jdbcType")
+    case JdbcType.Bit => Bit
     case JdbcType.TinyInt => TinyInt
     case JdbcType.SmallInt => SmallInt
     case JdbcType.Integer => Integer
