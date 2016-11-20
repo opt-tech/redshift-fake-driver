@@ -34,7 +34,7 @@ trait S3Service {
 
 class S3ServiceImpl(endpoint: String) extends S3Service {
 
-  private[s3] def mkClient(credentials: Credentials) = {
+  private[redshiftfake] def mkClient(credentials: Credentials) = {
     val client = credentials match {
       case Credentials.WithKey(accessKeyId, secretAccessKey) =>
         new AmazonS3Client(new BasicAWSCredentials(accessKeyId, secretAccessKey))

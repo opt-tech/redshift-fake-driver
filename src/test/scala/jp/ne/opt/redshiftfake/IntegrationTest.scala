@@ -2,12 +2,18 @@ package jp.ne.opt.redshiftfake
 
 import java.text.SimpleDateFormat
 
+import jp.ne.opt.redshiftfake.s3.S3ServiceImpl
 import org.scalatest.fixture
 
 class IntegrationTest extends fixture.FlatSpec with H2Sandbox with CIOnly {
 
   it should "unload / copy via manifest" in { conn =>
     skiplIfLocalEnvironment()
+
+    // create bucket
+    val dummyCredentials = Credentials.WithKey("AKIAXXXXXXXXXXXXXXX", "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY")
+    val s3Service = new S3ServiceImpl(Global.s3Endpoint)
+    s3Service.mkClient(dummyCredentials).createBucket("foo")
 
     // create source table
     conn.createStatement().execute("create table foo(a int, b boolean, c date)")
@@ -22,18 +28,18 @@ class IntegrationTest extends fixture.FlatSpec with H2Sandbox with CIOnly {
     conn.createStatement().execute("insert into foo values(5, true, '2016-11-21')")
 
     conn.createStatement().execute(
-      """unload ('select c, count(*), sum(a) from foo where b = true group by c order by c') to 'http://localhost:9444/foo/unloaded_'
-        |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
-        |manifest
-        |addquotes""".stripMargin
+      s"""unload ('select c, count(*), sum(a) from foo where b = true group by c order by c') to '${Global.s3Endpoint}foo/unloaded_'
+          |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+          |manifest
+          |addquotes""".stripMargin
     )
 
     conn.createStatement().execute(
-      """copy bar from 'http://localhost:9444/foo/unloaded_manifest'
-        |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
-        |manifest
-        |removequotes
-        |dateformat 'auto'""".stripMargin
+      s"""copy bar from '${Global.s3Endpoint}foo/unloaded_manifest'
+          |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+          |manifest
+          |removequotes
+          |dateformat 'auto'""".stripMargin
     )
 
     val resultSet = conn.createStatement().executeQuery("select * from bar order by d")
