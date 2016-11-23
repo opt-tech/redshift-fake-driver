@@ -9,13 +9,12 @@ The driver uses `AWS SDK for Java` to connect to S3, so you can use mocking libr
 ## Supported Redshift Commands
 - COPY
   - JSON with jsonpaths
-  - CSV (T.B.D.)
   - MANIFEST
 - UNLOAD
 - DDLs
   - just drop Redshift specific directives (e.g. DISTSTYLE, DISTKEY, ...)
 
-Some options are currently not working.
+Some options are currently not supported.
 
 Contributions are welcome !
 
@@ -54,22 +53,45 @@ Contributions are welcome !
 ### Setup Postgresql
 - Start postgresql database to mock Redshift.
 
-### Write an application.
-You should configure Redshift connection as follows only in local environment.
+### Write an application
 
-- driver
-  - `jp.ne.opt.redshiftfake.postgres.FakePostgresqlDriver`
-- url
-  - replace `jdbc:postgresql` with `jdbc:postgresqlredshift`
+#### Example in Scala
+
+```scala
+Class.forName("jp.ne.opt.redshiftfake.postgres.FakePostgresqlDriver")
+
+val endpoint = "http://localhost:9444/" // in production, this will "s3://"
+
+val url = "jdbc:postgresqlredshift://localhost:5432/foo"
+val prop = new Properties()
+prop.setProperty("driver", "jp.ne.opt.redshiftfake.postgres.FakePostgresqlDriver")
+prop.setProperty("user", "sa")
+
+val conn = DriverManager.getConnection(url, prop)
+val stmt = conn.createStatement()
+
+val unloadSql =
+  s"""unload ('select * from foo') to '${endpoint}foo/unloaded_'
+      |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY' 
+      |manifest""".stripMargin
+stmt.execute(unloadSql)
+
+val copySql =
+  s"""copy bar from '${endpoint}foo/unloaded_manifest'
+      |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+      |manifest""".stripMargin
+
+stmt.execute(copySql)
+```
 
 ### Run the application.
 #### With real S3
 - Specify region via `fake.awsRegion` system property.
-  - If you do not specify region, the default is `ap-northeast-1`.
+  - `ap-northeast-1` by default
 
 #### With fake-s3
 - Specify s3 endpoint via `fake.awsS3Endpoint` system property.
-  - if you started a `fake-s3` server on `http://localhost:9444/`, system property will be `-Dfake.awsS3Endpoint="http://localhost:9444/"`. (trailing slash is needed)
+  - if you started a `fake-s3` server on `http://localhost:9444/`, specify `-Dfake.awsS3Endpoint="http://localhost:9444/"`. (trailing slash is needed)
 
 ## License
 
