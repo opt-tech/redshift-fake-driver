@@ -2,7 +2,7 @@ package jp.ne.opt.redshiftfake.parse.compat
 
 import net.sf.jsqlparser.parser.CCJSqlParserUtil
 
-trait Compatible {
+trait QueryCompatibility {
 
   def dropIncompatibilities(selectStatement: String): String = {
     val parsed = CCJSqlParserUtil.parse(selectStatement)
