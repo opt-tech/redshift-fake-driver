@@ -31,7 +31,23 @@ trait CopyInterceptor extends Interceptor {
         columns.zip(columnDefinitions).zipWithIndex.foreach { case ((Column(value), ColumnDefinition(_, columnType)), parameterIndex) =>
           value match {
             case Some(s) => ParameterBinder(columnType, command.dateFormatType, command.timeFormatType).bind(s, stmt, parameterIndex + 1)
-            case _ => stmt.setObject(parameterIndex + 1, null)
+            case None => {
+              if (columnType.stringType) {
+                // treat empty string as null when format is JSON of EMPTYASNULL is enabled.
+                val jsonFormat = command.copyFormat match {
+                  case CopyFormat.Json(_) => true
+                  case _ => false
+                }
+
+                if (jsonFormat || command.emptyAsNull) {
+                  stmt.setObject(parameterIndex + 1, null)
+                } else {
+                  stmt.setString(parameterIndex + 1, "")
+                }
+              } else {
+                stmt.setObject(parameterIndex + 1, null)
+              }
+            }
           }
         }
 

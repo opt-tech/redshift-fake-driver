@@ -46,6 +46,10 @@ object CopyCommandParser extends BaseParser {
     s"$any*(?i)MANIFEST$any*".r
   }
 
+  val emptyAsNullParser = {
+    s"$any*(?i)EMPTYASNULL$any*".r
+  }
+
   def parse(query: String): Option[CopyCommand] = {
     val result = parse(
       ("(?i)COPY".r ~> tableNameParser) ~
@@ -62,7 +66,8 @@ object CopyCommandParser extends BaseParser {
           auth,
           format,
           parse(dateFormatParser, dataConversionParameters).getOrElse(DateFormatType.Default),
-          parse(timeFormatParser, dataConversionParameters).getOrElse(TimeFormatType.Default)
+          parse(timeFormatParser, dataConversionParameters).getOrElse(TimeFormatType.Default),
+          parse(emptyAsNullParser, dataConversionParameters).successful
         )
 
         // handle manifest

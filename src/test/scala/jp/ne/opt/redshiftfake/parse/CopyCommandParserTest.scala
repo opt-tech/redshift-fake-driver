@@ -23,7 +23,8 @@ class CopyCommandParserTest extends FlatSpec {
       ),
       copyFormat = CopyFormat.Default,
       dateFormatType = DateFormatType.Default,
-      timeFormatType = TimeFormatType.Default
+      timeFormatType = TimeFormatType.Default,
+      emptyAsNull = false
     )
 
     assert(CopyCommandParser.parse(command) == Some(expected))
@@ -111,5 +112,16 @@ class CopyCommandParserTest extends FlatSpec {
          |""".stripMargin
 
     assert(CopyCommandParser.parse(command).map(_.copyFormat) == Some(CopyFormat.Manifest(S3Location("some-bucket", "path/to/unloaded_manifest"))))
+  }
+
+  it should "parse emptyAsNull" in {
+    val command =
+      s"""
+         |COPY public._foo_42 FROM '${Global.s3Endpoint}some-bucket/path/to/unloaded_manifest'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |EMPTYASNULL;
+         |""".stripMargin
+
+    assert(CopyCommandParser.parse(command).map(_.emptyAsNull) == Some(true))
   }
 }

@@ -13,7 +13,8 @@ case class CopyCommand(
   credentials: Credentials,
   copyFormat: CopyFormat,
   dateFormatType: DateFormatType,
-  timeFormatType: TimeFormatType
+  timeFormatType: TimeFormatType,
+  emptyAsNull: Boolean
 ) {
   val qualifiedTableName = schemaName match {
     case Some(schema) => s"$schema.$tableName"

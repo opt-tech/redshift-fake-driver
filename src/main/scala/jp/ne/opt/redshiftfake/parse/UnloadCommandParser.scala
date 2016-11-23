@@ -1,9 +1,9 @@
 package jp.ne.opt.redshiftfake.parse
 
 import jp.ne.opt.redshiftfake.UnloadCommand
-import jp.ne.opt.redshiftfake.parse.compat.PostgresqlCompatible
+import jp.ne.opt.redshiftfake.parse.compat.Compatible
 
-object UnloadCommandParser extends BaseParser with PostgresqlCompatible {
+object UnloadCommandParser extends BaseParser with Compatible {
 
   object selectStatementParser extends Parser[String] {
     def apply(in: Input): ParseResult[String] = {

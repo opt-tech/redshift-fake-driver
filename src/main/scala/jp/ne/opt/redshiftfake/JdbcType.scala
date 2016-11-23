@@ -4,7 +4,9 @@ import java.sql.Types._
 
 case class UnknownJdbcTypeException(value: Int) extends RuntimeException(s"unknown type. value: $value")
 
-sealed abstract class JdbcType(val rawType: Int)
+sealed abstract class JdbcType(val rawType: Int) {
+  def stringType: Boolean = false
+}
 
 object JdbcType {
   case object Bit extends JdbcType(BIT)
@@ -17,9 +19,9 @@ object JdbcType {
   case object Double extends JdbcType(DOUBLE)
   case object Numeric extends JdbcType(NUMERIC)
   case object Decimal extends JdbcType(DECIMAL)
-  case object Char extends JdbcType(CHAR)
-  case object Varchar extends JdbcType(VARCHAR)
-  case object LongVarchar extends JdbcType(LONGVARCHAR)
+  case object Char extends JdbcType(CHAR) { override val stringType = true }
+  case object Varchar extends JdbcType(VARCHAR) { override val stringType = true }
+  case object LongVarchar extends JdbcType(LONGVARCHAR) { override val stringType = true }
   case object Date extends JdbcType(DATE)
   case object Time extends JdbcType(TIME)
   case object Timestamp extends JdbcType(TIMESTAMP)
@@ -39,8 +41,8 @@ object JdbcType {
   case object Boolean extends JdbcType(BOOLEAN)
   case object RowId extends JdbcType(ROWID)
   case object NChar extends JdbcType(NCHAR)
-  case object NVarchar extends JdbcType(NVARCHAR)
-  case object LongNVarchar extends JdbcType(LONGNVARCHAR)
+  case object NVarchar extends JdbcType(NVARCHAR) { override val stringType = true }
+  case object LongNVarchar extends JdbcType(LONGNVARCHAR) { override val stringType = true }
   case object NClob extends JdbcType(NCLOB)
   case object SqlXml extends JdbcType(SQLXML)
 
