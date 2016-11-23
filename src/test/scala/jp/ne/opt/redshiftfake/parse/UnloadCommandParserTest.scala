@@ -8,12 +8,12 @@ class UnloadCommandParserTest extends FlatSpec {
   it should "parse minimal UNLOAD command" in {
     val command =
       s"""
-         |UNLOAD ('${"""select * from foo_bar where baz = \'2016-01-01\'"""}') TO '${Global.s3Endpoint}some-bucket/path/to/data'
+         |UNLOAD ('${"""SELECT * FROM foo_bar WHERE baz = \'2016-01-01\'"""}') TO '${Global.s3Endpoint}some-bucket/path/to/data'
          |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY';
          |""".stripMargin
 
     val expected = UnloadCommand(
-      selectStatement = "select * from foo_bar where baz = '2016-01-01'",
+      selectStatement = "SELECT * FROM foo_bar WHERE baz = '2016-01-01'",
       destination = S3Location("some-bucket", "path/to/data"),
       credentials = Credentials.WithKey(
         accessKeyId = "AKIAXXXXXXXXXXXXXXX",

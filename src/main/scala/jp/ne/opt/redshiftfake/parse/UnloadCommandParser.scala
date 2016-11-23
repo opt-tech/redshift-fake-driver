@@ -1,8 +1,9 @@
 package jp.ne.opt.redshiftfake.parse
 
 import jp.ne.opt.redshiftfake.UnloadCommand
+import jp.ne.opt.redshiftfake.parse.compat.PostgresqlCompatible
 
-object UnloadCommandParser extends BaseParser {
+object UnloadCommandParser extends BaseParser with PostgresqlCompatible {
 
   object selectStatementParser extends Parser[String] {
     def apply(in: Input): ParseResult[String] = {
@@ -53,7 +54,7 @@ object UnloadCommandParser extends BaseParser {
         ("(?i)WITH".r.? ~> "(?i)CREDENTIALS".r ~> "(?i)AS".r.? ~> awsAuthArgsParser) ~
         s"$any*".r ^^ { case ~(~(~(statement, s3Location), auth), unloadOptions) =>
         UnloadCommand(
-          statement,
+          dropIncompatibilities(statement),
           s3Location,
           auth,
           parse(manifestParser, unloadOptions).successful,

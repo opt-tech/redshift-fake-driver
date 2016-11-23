@@ -13,7 +13,7 @@ licenses += "Apache 2" -> url("https://raw.githubusercontent.com/opt-tech/redshi
 
 organization := "jp.ne.opt"
 
-version := "1.0.1"
+version := "1.0.2-SNAPSHOT"
 
 scalacOptions ++= Seq(
   "-deprecation",
@@ -21,7 +21,7 @@ scalacOptions ++= Seq(
   "-feature"
 )
 
-libraryDependencies ++= (compileScope(jawn, scalaCsv) ++
+libraryDependencies ++= (compileScope(jawn, jsqlparser, scalaCsv) ++
   (if (scalaVersion.value.startsWith("2.10")) Nil else compileScope(parser)) ++
   testScope(postgres, h2, s3, scalatest) ++
   providedScope(postgres, h2, s3))
