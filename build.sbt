@@ -5,7 +5,7 @@ val scala210 = "2.10.6"
 
 scalaVersion := scala210
 
-crossScalaVersions := Seq(scala210, "2.11.8")
+crossScalaVersions := Seq(scala210, "2.11.8", "2.12.3")
 
 name := "redshift-fake-driver"
 

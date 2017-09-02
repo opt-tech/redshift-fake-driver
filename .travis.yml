@@ -1,14 +1,19 @@
 language: scala
 
-scala:
-  - 2.10.6
-  - 2.11.8
-
-jdk:
-  - oraclejdk7
-  - oraclejdk8
+matrix:
+  include:
+  - scala: 2.10.6
+    jdk: openjdk7
+  - scala: 2.10.6
+    jdk: openjdk8
+  - scala: 2.11.8
+    jdk: openjdk7
+  - scala: 2.11.8
+    jdk: openjdk8
+  - scala: 2.12.3
+    jdk: openjdk8
 
 script:
   - gem install fakes3
   - fakes3 -r ./fakes3_root -p 9444 &
-  - sbt -Dfake.awsS3Endpoint="http://localhost:9444/" test
+  - sbt -Dfake.awsS3Endpoint="http://localhost:9444/" ++$TRAVIS_SCALA_VERSION test
