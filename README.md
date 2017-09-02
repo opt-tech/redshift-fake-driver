@@ -23,7 +23,7 @@ Contributions are welcome !
 - `aws-java-sdk-s3` >= 1.10.8
 - `postgresql` or `h2` JDBC driver
 - Java >= 1.7
-- (If you use in Scala projects) Scala 2.10.x or 2.11.x or 2.12.x
+- (If you use in Scala projects) Scala 2.10.x / 2.11.x / 2.12.x(Java 1.8)
 
 ## Installation
 ### Maven Java projects
@@ -60,7 +60,7 @@ Contributions are welcome !
 ```scala
 Class.forName("jp.ne.opt.redshiftfake.postgres.FakePostgresqlDriver")
 
-val endpoint = "http://localhost:9444/" // in production, this will "s3://"
+val endpoint = "http://localhost:9444/" // in production, scheme  will be "s3://"
 
 val url = "jdbc:postgresqlredshift://localhost:5432/foo"
 val prop = new Properties()
