@@ -23,7 +23,7 @@ Contributions are welcome !
 - `aws-java-sdk-s3` >= 1.10.8
 - `postgresql` or `h2` JDBC driver
 - Java >= 1.7
-- (If you use in Scala projects) Scala 2.10.x or 2.11.x
+- (If you use in Scala projects) Scala 2.10.x or 2.11.x or 2.12.x
 
 ## Installation
 ### Maven Java projects
