@@ -28,14 +28,14 @@ class IntegrationTest extends fixture.FlatSpec with H2Sandbox with CIOnly {
     conn.createStatement().execute("insert into foo values(5, true, '2016-11-21')")
 
     conn.createStatement().execute(
-      s"""unload ('select c, count(*), sum(a) from foo where b = true group by c order by c') to '${Global.s3Endpoint}foo/unloaded_'
+      s"""unload ('select c, count(*), sum(a) from foo where b = true group by c order by c') to '${Global.s3Scheme}foo/unloaded_'
           |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
           |manifest
           |addquotes""".stripMargin
     )
 
     conn.createStatement().execute(
-      s"""copy bar from '${Global.s3Endpoint}foo/unloaded_manifest'
+      s"""copy bar from '${Global.s3Scheme}foo/unloaded_manifest'
           |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
           |manifest
           |removequotes
