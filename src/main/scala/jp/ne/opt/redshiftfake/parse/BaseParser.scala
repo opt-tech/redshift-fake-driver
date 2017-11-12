@@ -12,7 +12,7 @@ trait BaseParser extends RegexParsers {
 
   val any = """(.|\s)"""
 
-  val s3LocationParser = Global.s3Endpoint ~> """[\w-]+""".r ~ ("/" ~> """[\w/:%#$&?()~.=+-]+""".r).? ^^ {
+  val s3LocationParser = Global.s3Scheme ~> """[\w-]+""".r ~ ("/" ~> """[\w/:%#$&?()~.=+-]+""".r).? ^^ {
     case ~(bucket, prefix) => S3Location(bucket, prefix.getOrElse(""))
   }
 

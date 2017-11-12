@@ -7,5 +7,5 @@ import jp.ne.opt.redshiftfake.Global
  */
 case class S3Location(bucket: String, prefix: String) {
   val path = s"$bucket/$prefix"
-  val full = Global.s3Endpoint + path
+  val full = Global.s3Scheme + path
 }

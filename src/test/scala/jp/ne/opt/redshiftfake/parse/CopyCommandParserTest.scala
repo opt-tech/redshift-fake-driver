@@ -8,7 +8,7 @@ class CopyCommandParserTest extends FlatSpec {
   it should "parse minimal COPY command" in {
     val command =
       s"""
-        |COPY public._foo_42 FROM '${Global.s3Endpoint}some-bucket/path/to/data/foo-bar.csv'
+        |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY';
         |""".stripMargin
 
@@ -33,16 +33,16 @@ class CopyCommandParserTest extends FlatSpec {
   it should "parse JSON format" in {
     val command =
       s"""
-        |COPY public._foo_42 FROM '${Global.s3Endpoint}some-bucket/path/to/data/foo-bar.csv'
+        |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
         |JSON;
         |""".stripMargin
 
     val commandWithJsonpath =
       s"""
-        |COPY public._foo_42 FROM '${Global.s3Endpoint}some-bucket/path/to/data/foo-bar.csv'
+        |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
-        |JSON '${Global.s3Endpoint}some-bucket/path/to/jsonpaths.txt';
+        |JSON '${Global.s3Scheme}some-bucket/path/to/jsonpaths.txt';
         |""".stripMargin
 
     assert(CopyCommandParser.parse(command).map(_.copyFormat) == Some(CopyFormat.Json(None)))
@@ -52,14 +52,14 @@ class CopyCommandParserTest extends FlatSpec {
   it should "parse date format" in {
     val auto =
       s"""
-         |COPY public._foo_42 FROM '${Global.s3Endpoint}some-bucket/path/to/data/foo-bar.csv'
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
          |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
          |DATEFORMAT 'auto';
          |""".stripMargin
 
     val custom =
       s"""
-         |COPY public._foo_42 FROM '${Global.s3Endpoint}some-bucket/path/to/data/foo-bar.csv'
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
          |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
          |DATEFORMAT 'YYYY/MM/DD';
          |""".stripMargin
@@ -71,28 +71,28 @@ class CopyCommandParserTest extends FlatSpec {
   it should "parse time format" in {
     val auto =
       s"""
-         |COPY public._foo_42 FROM '${Global.s3Endpoint}some-bucket/path/to/data/foo-bar.csv'
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
          |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
          |TIMEFORMAT 'auto';
          |""".stripMargin
 
     val epochsecs =
       s"""
-         |COPY public._foo_42 FROM '${Global.s3Endpoint}some-bucket/path/to/data/foo-bar.csv'
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
          |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
          |TIMEFORMAT 'epochsecs';
          |""".stripMargin
 
     val epochmillisecs =
       s"""
-         |COPY public._foo_42 FROM '${Global.s3Endpoint}some-bucket/path/to/data/foo-bar.csv'
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
          |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
          |TIMEFORMAT 'epochmillisecs';
          |""".stripMargin
 
     val custom =
       s"""
-         |COPY public._foo_42 FROM '${Global.s3Endpoint}some-bucket/path/to/data/foo-bar.csv'
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
          |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
          |TIMEFORMAT 'YYYY/MM/DD HH:MI:SS.SSS';
          |""".stripMargin
@@ -106,7 +106,7 @@ class CopyCommandParserTest extends FlatSpec {
   it should "parse manifest" in {
     val command =
       s"""
-         |COPY public._foo_42 FROM '${Global.s3Endpoint}some-bucket/path/to/unloaded_manifest'
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/unloaded_manifest'
          |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
          |MANIFEST;
          |""".stripMargin
@@ -117,7 +117,7 @@ class CopyCommandParserTest extends FlatSpec {
   it should "parse emptyAsNull" in {
     val command =
       s"""
-         |COPY public._foo_42 FROM '${Global.s3Endpoint}some-bucket/path/to/unloaded_manifest'
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/unloaded_manifest'
          |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
          |EMPTYASNULL;
          |""".stripMargin
