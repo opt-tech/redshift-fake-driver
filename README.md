@@ -91,8 +91,8 @@ stmt.execute(copySql)
 
 #### With fake-s3
 - Specify s3 endpoint via `fake.awsS3Endpoint` system property.
-  - if you started a `fake-s3` server on `http://localhost:9444/`, specify `-Dfake.awsS3Endpoint="http://localhost:9444/"`. (trailing slash is needed)
-
+  - if you started a `fake-s3` server on `http://localhost:9444/`, specify `-Dfake.awsS3Endpoint="http://localhost:9444/"`. (trailing slash is required)
+  - you do not have to change S3 URL in your SQL (copy/unload).
 ## License
 
 Apache 2.0
