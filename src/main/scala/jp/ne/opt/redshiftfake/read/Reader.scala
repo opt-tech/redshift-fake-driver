@@ -40,7 +40,7 @@ class Reader(copyCommand: CopyCommand, columnDefinitions: Seq[ColumnDefinition],
           content <- contents
           line <- content.trim.lines
         } yield {
-          val csvReader = new CsvReader(line)
+          val csvReader = new CsvReader(line, copyCommand.delimiter, copyCommand.nullAs)
           csvReader.toRow
         })(collection.breakOut)
       case _ => Nil

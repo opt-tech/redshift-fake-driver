@@ -24,7 +24,9 @@ class CopyCommandParserTest extends FlatSpec {
       copyFormat = CopyFormat.Default,
       dateFormatType = DateFormatType.Default,
       timeFormatType = TimeFormatType.Default,
-      emptyAsNull = false
+      emptyAsNull = false,
+      delimiter = ',',
+      nullAs = "\u000e"
     )
 
     assert(CopyCommandParser.parse(command) == Some(expected))
@@ -123,5 +125,70 @@ class CopyCommandParserTest extends FlatSpec {
          |""".stripMargin
 
     assert(CopyCommandParser.parse(command).map(_.emptyAsNull) == Some(true))
+  }
+
+  it should "parse quoted schema and table names" in {
+    val command =
+      s"""
+         |COPY "public"."mytable"
+         |FROM '${Global.s3Scheme}some-bucket/path/to/unloaded_manifest.json'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |manifest
+         |""".stripMargin
+
+    assert(CopyCommandParser.parse(command).map(_.schemaName) == Some(Some("public")))
+    assert(CopyCommandParser.parse(command).map(_.tableName) == Some("mytable"))
+  }
+
+  it should "parse delimiter from copy command" in {
+    val command =
+      s"""
+         |COPY "public"."mytable"
+         |FROM '${Global.s3Scheme}some-bucket/path/to/unloaded_manifest.json'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |DELIMITER AS '|'
+         |manifest
+         |""".stripMargin
+
+    assert(CopyCommandParser.parse(command).map(_.delimiter) == Some('|'))
+  }
+
+  it should "set default delimiter correctly" in {
+    val command =
+      s"""
+         |COPY "public"."mytable"
+         |FROM '${Global.s3Scheme}some-bucket/path/to/unloaded_manifest.json'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |FORMAT AS CSV
+         |manifest
+         |""".stripMargin
+
+    assert(CopyCommandParser.parse(command).map(_.delimiter) == Some(','))
+  }
+
+  it should "parse 'null as' from copy command" in {
+    val command =
+      s"""
+         |COPY "public"."mytable"
+         |FROM '${Global.s3Scheme}some-bucket/path/to/unloaded_manifest.json'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |NULL AS '@NULL@'
+         |manifest
+         |""".stripMargin
+
+    assert(CopyCommandParser.parse(command).map(_.nullAs) == Some("@NULL@"))
+  }
+
+  it should "set default 'null as' correctly" in {
+    val command =
+      s"""
+         |COPY "public"."mytable"
+         |FROM '${Global.s3Scheme}some-bucket/path/to/unloaded_manifest.json'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |FORMAT AS CSV
+         |manifest
+         |""".stripMargin
+
+    assert(CopyCommandParser.parse(command).map(_.nullAs) == Some("\u000e"))
   }
 }
