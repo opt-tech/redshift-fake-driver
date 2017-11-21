@@ -72,7 +72,7 @@ object CopyCommandParser extends BaseParser {
           parse(dateFormatParser, dataConversionParameters).getOrElse(DateFormatType.Default),
           parse(timeFormatParser, dataConversionParameters).getOrElse(TimeFormatType.Default),
           parse(emptyAsNullParser, dataConversionParameters).successful,
-          parse(delimiterParser, dataConversionParameters).getOrElse(','),
+          parse(delimiterParser, dataConversionParameters).getOrElse('|'),
           parse(nullAsParser, dataConversionParameters).getOrElse("\u000e")
         )
 

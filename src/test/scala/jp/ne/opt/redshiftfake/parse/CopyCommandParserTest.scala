@@ -25,7 +25,7 @@ class CopyCommandParserTest extends FlatSpec {
       dateFormatType = DateFormatType.Default,
       timeFormatType = TimeFormatType.Default,
       emptyAsNull = false,
-      delimiter = ',',
+      delimiter = '|',
       nullAs = "\u000e"
     )
 
@@ -146,11 +146,11 @@ class CopyCommandParserTest extends FlatSpec {
          |COPY "public"."mytable"
          |FROM '${Global.s3Scheme}some-bucket/path/to/unloaded_manifest.json'
          |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
-         |DELIMITER AS '|'
+         |DELIMITER AS ','
          |manifest
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(command).map(_.delimiter) == Some('|'))
+    assert(CopyCommandParser.parse(command).map(_.delimiter) == Some(','))
   }
 
   it should "set default delimiter correctly" in {
@@ -163,7 +163,7 @@ class CopyCommandParserTest extends FlatSpec {
          |manifest
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(command).map(_.delimiter) == Some(','))
+    assert(CopyCommandParser.parse(command).map(_.delimiter) == Some('|'))
   }
 
   it should "parse 'null as' from copy command" in {
