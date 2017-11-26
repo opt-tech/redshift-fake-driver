@@ -1,11 +1,11 @@
 import Deps._
 import Helpers._
 
-val scala210 = "2.10.6"
+val scala210 = "2.10.7"
 
 scalaVersion := scala210
 
-crossScalaVersions := Seq(scala210, "2.11.8", "2.12.3")
+crossScalaVersions := Seq(scala210, "2.11.12", "2.12.4")
 
 name := "redshift-fake-driver"
 

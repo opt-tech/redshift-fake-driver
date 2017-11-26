@@ -11,9 +11,10 @@ object DDLParser extends BaseParser {
 
     s"(?i)(COMPOUND|INTERLEAVED)?${space}SORTKEY$space\\($columnsRegex\\)".r
   }
+  val encodeRegex = s"(?i)${space}ENCODE$space$identifier$space".r
 
   def sanitize(ddl: String): String = {
-    Seq(distStyleRegex, distKeyRegex, sortKeyRegex).foldLeft(ddl) { (current, regex) =>
+    Seq(distStyleRegex, distKeyRegex, sortKeyRegex, encodeRegex).foldLeft(ddl) { (current, regex) =>
       regex.replaceAllIn(current, "")
     }
   }
