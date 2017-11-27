@@ -34,7 +34,7 @@ Contributions are welcome !
 <dependency>
     <groupId>jp.ne.opt</groupId>
     <artifactId>redshift-fake-driver_2.11</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
 </dependency>
 ```
 
@@ -43,7 +43,7 @@ Contributions are welcome !
 ### SBT Projects
 - Add following dependency to `build.sbt`
 ```
-"jp.ne.opt" %% "redshift-fake-driver" % "1.0.4"
+"jp.ne.opt" %% "redshift-fake-driver" % "1.0.5"
 ```
 
 - Add other required dependencies (aws-java-sdk-s3, h2 or postgresql driver) to `build.sbt`.
