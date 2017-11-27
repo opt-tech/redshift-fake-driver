@@ -35,7 +35,7 @@ class Reader(copyCommand: CopyCommand, columnDefinitions: Seq[ColumnDefinition],
           }
           Row(columns)
         })(collection.breakOut)
-      case CopyFormat.Manifest(manifestLocation) =>
+      case CopyFormat.Manifest(_) =>
         (for {
           content <- contents
           line <- content.trim.lines
@@ -43,7 +43,8 @@ class Reader(copyCommand: CopyCommand, columnDefinitions: Seq[ColumnDefinition],
           val csvReader = new CsvReader(line, copyCommand.delimiter, copyCommand.nullAs)
           csvReader.toRow
         })(collection.breakOut)
-      case _ => Nil
+      case _ =>
+        throw new UnsupportedOperationException("to be implemented")
     }
   }
 
