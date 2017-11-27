@@ -27,6 +27,8 @@ trait BaseParser extends RegexParsers {
 
     "'" ~> parserWithKey <~ "'"
   }
+
+  val delimiterParser = s"$any*(?i)DELIMITER".r ~> "(?i)AS".r.? ~> "'" ~> """[|,]""".r <~ "'" <~ s"$any*".r ^^ { s => s.head }
 }
 
 object BaseParser extends BaseParser

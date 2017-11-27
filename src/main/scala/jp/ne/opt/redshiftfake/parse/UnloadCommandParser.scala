@@ -38,8 +38,6 @@ object UnloadCommandParser extends BaseParser with QueryCompatibility {
 
   val addQuotesParser = s"$any*(?i)ADDQUOTES$any*".r
 
-  val delimiterParser = s"$any*(?i)DELIMITER".r ~> "(?i)AS".r.? ~> "'" ~> """[|,]""".r <~ "'" <~ s"$any*".r ^^ { s => s.head }
-
   val manifestParser = s"$any*(?i)MANIFEST$any*".r
 
   val statementParser = "(?i)UNLOAD".r ~> selectStatementParser ^^ { s =>
