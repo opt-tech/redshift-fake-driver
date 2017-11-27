@@ -5,11 +5,11 @@ import jp.ne.opt.redshiftfake._
 object CopyCommandParser extends BaseParser {
   case class TableAndSchemaName(schemaName: Option[String], tableName: String)
 
-  val tableNameParser = ((identifier.r <~ ".").? ~ identifier.r) ^^ {
+  val tableNameParser = ((quotedIdentifier <~ ".").? ~ quotedIdentifier) ^^ {
     case ~(schemaName, tableName) => TableAndSchemaName(schemaName, tableName)
   }
 
-  val columnListParser = "(" ~> ((identifier.r <~ s",$space".r).* ~ identifier.r) <~ ")" ^^ {
+  val columnListParser = "(" ~> ((quotedIdentifier <~ s",$space".r).* ~ quotedIdentifier) <~ ")" ^^ {
     case ~(init, last) => init :+ last
   }
 
@@ -23,6 +23,8 @@ object CopyCommandParser extends BaseParser {
 
     "(?i)FORMAT".r.? ~> "(?i)AS".r.? ~> json.? ^^ (_.getOrElse(CopyFormat.Default))
   }
+
+  val nullAsParser = s"$any*(?i)NULL$space+AS".r ~> "'" ~> """[^']*""".r <~ "'" <~ s"$any*".r
 
   val timeFormatParser: Parser[TimeFormatType] = {
     s"$any*(?i)TIMEFORMAT".r ~> "(?i)AS".r.? ~>
@@ -67,7 +69,9 @@ object CopyCommandParser extends BaseParser {
           format,
           parse(dateFormatParser, dataConversionParameters).getOrElse(DateFormatType.Default),
           parse(timeFormatParser, dataConversionParameters).getOrElse(TimeFormatType.Default),
-          parse(emptyAsNullParser, dataConversionParameters).successful
+          parse(emptyAsNullParser, dataConversionParameters).successful,
+          parse(delimiterParser, dataConversionParameters).getOrElse('|'),
+          parse(nullAsParser, dataConversionParameters).getOrElse("\u000e")
         )
 
         // handle manifest

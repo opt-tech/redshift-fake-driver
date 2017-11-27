@@ -5,10 +5,10 @@ import jp.ne.opt.redshiftfake.{Column, Row}
 
 case class InvalidCsvException(message: String) extends RuntimeException
 
-class CsvReader(csvRow: String) {
+class CsvReader(csvRow: String, delimiterChar: Char, nullAs: String) {
 
   private[this] object csvFormat extends CSVFormat {
-    val delimiter: Char = '|'
+    val delimiter: Char = delimiterChar
     val quoteChar: Char = '"'
     val treatEmptyLineAsNil: Boolean = false
     val escapeChar: Char = '\\'
@@ -22,7 +22,7 @@ class CsvReader(csvRow: String) {
     // to recognize last field when the field is empty.
     val parsed = parser.parseLine(csvRow + csvFormat.delimiter + emptyField)
     parsed.map { xs => Row(xs.map {
-      column => Column(if (column.nonEmpty) Some(column) else None)
+      column => Column(if (column.nonEmpty && column != nullAs) Some(column) else None)
     })}.getOrElse(throw InvalidCsvException(s"invalid csv row : $csvRow"))
   }
 }
