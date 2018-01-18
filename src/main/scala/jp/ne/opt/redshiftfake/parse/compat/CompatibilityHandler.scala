@@ -216,6 +216,22 @@ class CompatibilityHandler extends SelectVisitor
   }
 
   def visit(function: Function): Unit = {
+    function.getName.toLowerCase match {
+      case "getdate" =>
+        function.setName("now")
+      //https://www.postgresql.org/docs/9.5/static/functions-conditional.html
+      case "nvl" =>
+        function.setName("coalesce")
+      //https://docs.aws.amazon.com/redshift/latest/dg/r_LISTAGG.html
+      case "listagg" =>
+        //https://www.postgresql.org/docs/current/static/functions-aggregate.html
+        function.setName("string_agg")
+        function.getParameters.setExpressions(function.getParameters.getExpressions.asScala
+          .filter {
+            case e if !e.toString.toLowerCase.equals("distinct") => true
+            case _                                               => false
+          }.asJava)
+    }
     Option(function.getParameters).foreach(visit)
   }
 
