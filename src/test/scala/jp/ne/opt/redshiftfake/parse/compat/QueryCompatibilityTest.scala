@@ -25,6 +25,11 @@ class QueryCompatibilityTest extends FlatSpec {
     assert(QueryCompatibilityUnderTest.dropIncompatibilities(selectStatementWithListAggWithDistinct)
       .equalsIgnoreCase("select string_agg(name, ',') from names"))
 
+    val selectStatementWithListAggWithOrdering =
+      "select listagg(name, ',') WITHIN GROUP (ORDER BY name) from names group by age"
+    assert(QueryCompatibilityUnderTest.dropIncompatibilities(selectStatementWithListAggWithOrdering)
+      .equalsIgnoreCase("select string_agg(name, ',') from names group by age"))
+
 
     val selectStatementWithGetdate = "select getdate()"
     assert(QueryCompatibilityUnderTest.dropIncompatibilities(selectStatementWithGetdate)

@@ -226,11 +226,8 @@ class CompatibilityHandler extends SelectVisitor
       case "listagg" =>
         //https://www.postgresql.org/docs/current/static/functions-aggregate.html
         function.setName("string_agg")
-        function.getParameters.setExpressions(function.getParameters.getExpressions.asScala
-          .filter {
-            case e if !e.toString.toLowerCase.equals("distinct") => true
-            case _                                               => false
-          }.asJava)
+        function.setDistinct(false)
+      case _ =>;
     }
     Option(function.getParameters).foreach(visit)
   }
@@ -326,6 +323,18 @@ class CompatibilityHandler extends SelectVisitor
   }
 
   def visit(selectExpressionItem: SelectExpressionItem): Unit = {
+
+    selectExpressionItem.getExpression match {
+      case expression: WithinGroupExpression =>
+        if (expression.getName.equalsIgnoreCase("listagg")){
+          val asFunction = new Function()
+          asFunction.setName(expression.getName)
+          asFunction.setParameters(expression.getExprList)
+          selectExpressionItem.setExpression(asFunction)
+        }
+      case _ =>;
+    }
+
     selectExpressionItem.getExpression.accept(this)
   }
 
