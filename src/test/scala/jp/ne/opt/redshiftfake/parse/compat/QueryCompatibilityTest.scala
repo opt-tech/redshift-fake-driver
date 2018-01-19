@@ -34,6 +34,25 @@ class QueryCompatibilityTest extends FlatSpec {
     val selectStatementWithGetdate = "select getdate()"
     assert(QueryCompatibilityUnderTest.dropIncompatibilities(selectStatementWithGetdate)
       .equalsIgnoreCase("select now()"))
+
+    val selectStatementWithMedian = "select median(age)"
+    assert(QueryCompatibilityUnderTest.dropIncompatibilities(selectStatementWithMedian)
+      .equalsIgnoreCase("select percentile_cont(0.5) within group (order by age)"))
+
+    val selectStatementWithNVL2 = "select nvl2(name, 'a', 'b')from sales"
+    assert(QueryCompatibilityUnderTest.dropIncompatibilities(selectStatementWithNVL2)
+      .equalsIgnoreCase("select case name is not null 'a' else 'b' end from sales"))
+
+  }
+
+  it should "remove the appoximate keyword" in {
+    val selectStatementWithApproximatePercentileDisc = "select approximate percentile_disc(0.5) within group (order by totalprice) from sales"
+    assert(QueryCompatibilityUnderTest.dropIncompatibilities(selectStatementWithApproximatePercentileDisc)
+      .equalsIgnoreCase("select percentile_disc(0.5) within group (order by totalprice) from sales"))
+
+    val selectStatementWithApproximateCount = "select approximate count(*) from sales"
+    assert(QueryCompatibilityUnderTest.dropIncompatibilities(selectStatementWithApproximateCount)
+      .equalsIgnoreCase("select count(*) from sales"))
   }
 }
 

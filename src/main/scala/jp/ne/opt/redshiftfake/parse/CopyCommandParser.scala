@@ -24,8 +24,6 @@ object CopyCommandParser extends BaseParser {
     "(?i)FORMAT".r.? ~> "(?i)AS".r.? ~> json.? ^^ (_.getOrElse(CopyFormat.Default))
   }
 
-  val nullAsParser = s"$any*(?i)NULL$space+AS".r ~> "'" ~> """[^']*""".r <~ "'" <~ s"$any*".r
-
   val timeFormatParser: Parser[TimeFormatType] = {
     s"$any*(?i)TIMEFORMAT".r ~> "(?i)AS".r.? ~>
       ("'auto'" | "'epochsecs'" | "'epochmillisecs'" | "'" ~> """[ \w./:,-]+""".r <~ "'") <~

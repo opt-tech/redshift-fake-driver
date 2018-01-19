@@ -332,6 +332,39 @@ class CompatibilityHandler extends SelectVisitor
           asFunction.setParameters(expression.getExprList)
           selectExpressionItem.setExpression(asFunction)
         }
+      case expression: Function =>
+        expression.getName.toLowerCase match {
+          case "median" => {
+            //https://docs.aws.amazon.com/redshift/latest/dg/r_MEDIAN.html
+            val asPercentileCont = new WithinGroupExpression()
+            asPercentileCont.setName("percentile_cont")
+            val parameters = new ExpressionList
+
+            parameters.setExpressions(List(new DoubleValue("0.5").asInstanceOf[Expression]).asJava)
+            asPercentileCont.setExprList(parameters)
+
+            val orderBy = new OrderByElement()
+            orderBy.setExpression(expression.getParameters.getExpressions.get(0))
+            asPercentileCont.setOrderByElements(List(orderBy).asJava)
+            selectExpressionItem.setExpression(asPercentileCont)
+          }
+          case "nvl2" => {
+            //https://docs.aws.amazon.com/redshift/latest/dg/r_NVL2.html
+            val functionsArguments = expression.getParameters.getExpressions
+
+            val asCaseStatement = new CaseExpression
+            val isNullExpression = new IsNullExpression
+            isNullExpression.setNot(true)
+            isNullExpression.setLeftExpression(functionsArguments.get(0))
+            asCaseStatement.setSwitchExpression(isNullExpression)
+            asCaseStatement.setWhenClauses(List(functionsArguments.get(1)).asJava)
+            asCaseStatement.setElseExpression(functionsArguments.get(2))
+
+            selectExpressionItem.setExpression(asCaseStatement)
+          }
+          case _ => ;
+        }
+
       case _ =>;
     }
 
