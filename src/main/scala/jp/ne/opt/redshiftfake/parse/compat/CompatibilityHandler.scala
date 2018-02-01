@@ -362,6 +362,44 @@ class CompatibilityHandler extends SelectVisitor
 
             selectExpressionItem.setExpression(asCaseStatement)
           }
+          //The simplest way to achieve this in postgres is as follows:
+          // `case when extract(epoch from age(a, b)) > 0 then 1 when extract(epoch from age(a, b)) < 0 then -1 else 0 end`
+          case "timestamp_cmp" => {
+            val functionsArguments = expression.getParameters.getExpressions
+            val asCaseStatement = new CaseExpression
+
+            val ageFunction = new Function()
+            ageFunction.setName("age")
+            val ageFunctionParameters = new ExpressionList()
+
+            ageFunctionParameters.setExpressions(functionsArguments)
+            ageFunction.setParameters(ageFunctionParameters)
+
+            val extractSecondsFromAge = new ExtractExpression()
+            extractSecondsFromAge.setName("epoch")
+            extractSecondsFromAge.setExpression(ageFunction)
+
+            val greaterThan = new GreaterThan()
+            greaterThan.setLeftExpression(extractSecondsFromAge)
+            greaterThan.setRightExpression(new LongValue(0))
+
+            val greaterThanWhenClause = new WhenClause
+            greaterThanWhenClause.setWhenExpression(greaterThan)
+            greaterThanWhenClause.setThenExpression(new LongValue(1))
+
+            val lessThan = new MinorThan()
+            lessThan.setLeftExpression(extractSecondsFromAge)
+            lessThan.setRightExpression(new LongValue(0))
+
+            val lessThanWhenClause = new WhenClause
+            lessThanWhenClause.setWhenExpression(lessThan)
+            lessThanWhenClause.setThenExpression(new LongValue(-1))
+
+            asCaseStatement.setWhenClauses(List(greaterThanWhenClause.asInstanceOf[Expression], lessThanWhenClause.asInstanceOf[Expression]).asJava)
+            asCaseStatement.setElseExpression(new LongValue(0))
+
+            selectExpressionItem.setExpression(asCaseStatement)
+          }
           case _ => ;
         }
 

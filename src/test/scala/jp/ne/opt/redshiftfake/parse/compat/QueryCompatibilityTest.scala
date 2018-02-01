@@ -69,5 +69,15 @@ class QueryCompatibilityTest extends FlatSpec {
     assert(QueryCompatibilityUnderTest.dropIncompatibilities(selectStatementWithApproximateCount)
       .equalsIgnoreCase("select count(*) from sales"))
   }
+
+  it should "convert timestamp_cmp() to CASE statement with age function" in {
+    val selectStatementWithApproximateCount = "select timestamp_cmp(a,b) from sales"
+    assert(QueryCompatibilityUnderTest.dropIncompatibilities(selectStatementWithApproximateCount)
+      .equalsIgnoreCase("SELECT CASE " +
+        "WHEN EXTRACT(epoch FROM age(a, b)) > 0 THEN 1 " +
+        "WHEN EXTRACT(epoch FROM age(a, b)) < 0 THEN -1 " +
+        "ELSE 0 END " +
+        "FROM sales"))
+  }
 }
 
