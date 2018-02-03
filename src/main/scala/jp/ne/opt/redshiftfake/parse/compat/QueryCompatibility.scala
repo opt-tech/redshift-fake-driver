@@ -5,7 +5,12 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil
 trait QueryCompatibility {
 
   def dropIncompatibilities(selectStatement: String): String = {
-    val parsed = CCJSqlParserUtil.parse(selectStatement)
+    /*
+    jsqlparser does not support approximate:
+    https://github.com/JSQLParser/JSqlParser/issues/570
+     */
+    val selectStatementWithoutAppoximate = selectStatement.replaceAll("(?i)[, ][ ]*approximate ", " ")
+    val parsed = CCJSqlParserUtil.parse(selectStatementWithoutAppoximate)
     val handler = new CompatibilityHandler
     parsed.accept(handler)
 

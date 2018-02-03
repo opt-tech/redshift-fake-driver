@@ -216,6 +216,19 @@ class CompatibilityHandler extends SelectVisitor
   }
 
   def visit(function: Function): Unit = {
+    function.getName.toLowerCase match {
+      case "getdate" =>
+        function.setName("now")
+      //https://www.postgresql.org/docs/9.5/static/functions-conditional.html
+      case "nvl" =>
+        function.setName("coalesce")
+      //https://docs.aws.amazon.com/redshift/latest/dg/r_LISTAGG.html
+      case "listagg" =>
+        //https://www.postgresql.org/docs/current/static/functions-aggregate.html
+        function.setName("string_agg")
+        function.setDistinct(false)
+      case _ =>;
+    }
     Option(function.getParameters).foreach(visit)
   }
 
@@ -310,6 +323,89 @@ class CompatibilityHandler extends SelectVisitor
   }
 
   def visit(selectExpressionItem: SelectExpressionItem): Unit = {
+
+    selectExpressionItem.getExpression match {
+      case expression: WithinGroupExpression =>
+        if (expression.getName.equalsIgnoreCase("listagg")){
+          val asFunction = new Function()
+          asFunction.setName(expression.getName)
+          asFunction.setParameters(expression.getExprList)
+          selectExpressionItem.setExpression(asFunction)
+        }
+      case expression: Function =>
+        expression.getName.toLowerCase match {
+          case "median" => {
+            //https://docs.aws.amazon.com/redshift/latest/dg/r_MEDIAN.html
+            val asPercentileCont = new WithinGroupExpression()
+            asPercentileCont.setName("percentile_cont")
+            val parameters = new ExpressionList
+
+            parameters.setExpressions(List(new DoubleValue("0.5").asInstanceOf[Expression]).asJava)
+            asPercentileCont.setExprList(parameters)
+
+            val orderBy = new OrderByElement()
+            orderBy.setExpression(expression.getParameters.getExpressions.get(0))
+            asPercentileCont.setOrderByElements(List(orderBy).asJava)
+            selectExpressionItem.setExpression(asPercentileCont)
+          }
+          case "nvl2" => {
+            //https://docs.aws.amazon.com/redshift/latest/dg/r_NVL2.html
+            val functionsArguments = expression.getParameters.getExpressions
+
+            val asCaseStatement = new CaseExpression
+            val isNullExpression = new IsNullExpression
+            isNullExpression.setNot(true)
+            isNullExpression.setLeftExpression(functionsArguments.get(0))
+            asCaseStatement.setSwitchExpression(isNullExpression)
+            asCaseStatement.setWhenClauses(List(functionsArguments.get(1)).asJava)
+            asCaseStatement.setElseExpression(functionsArguments.get(2))
+
+            selectExpressionItem.setExpression(asCaseStatement)
+          }
+          //The simplest way to achieve this in postgres is as follows:
+          // `case when extract(epoch from age(a, b)) > 0 then 1 when extract(epoch from age(a, b)) < 0 then -1 else 0 end`
+          case "timestamp_cmp" => {
+            val functionsArguments = expression.getParameters.getExpressions
+            val asCaseStatement = new CaseExpression
+
+            val ageFunction = new Function()
+            ageFunction.setName("age")
+            val ageFunctionParameters = new ExpressionList()
+
+            ageFunctionParameters.setExpressions(functionsArguments)
+            ageFunction.setParameters(ageFunctionParameters)
+
+            val extractSecondsFromAge = new ExtractExpression()
+            extractSecondsFromAge.setName("epoch")
+            extractSecondsFromAge.setExpression(ageFunction)
+
+            val greaterThan = new GreaterThan()
+            greaterThan.setLeftExpression(extractSecondsFromAge)
+            greaterThan.setRightExpression(new LongValue(0))
+
+            val greaterThanWhenClause = new WhenClause
+            greaterThanWhenClause.setWhenExpression(greaterThan)
+            greaterThanWhenClause.setThenExpression(new LongValue(1))
+
+            val lessThan = new MinorThan()
+            lessThan.setLeftExpression(extractSecondsFromAge)
+            lessThan.setRightExpression(new LongValue(0))
+
+            val lessThanWhenClause = new WhenClause
+            lessThanWhenClause.setWhenExpression(lessThan)
+            lessThanWhenClause.setThenExpression(new LongValue(-1))
+
+            asCaseStatement.setWhenClauses(List(greaterThanWhenClause.asInstanceOf[Expression], lessThanWhenClause.asInstanceOf[Expression]).asJava)
+            asCaseStatement.setElseExpression(new LongValue(0))
+
+            selectExpressionItem.setExpression(asCaseStatement)
+          }
+          case _ => ;
+        }
+
+      case _ =>;
+    }
+
     selectExpressionItem.getExpression.accept(this)
   }
 
