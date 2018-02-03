@@ -53,4 +53,45 @@ class IntegrationTest extends fixture.FlatSpec with H2Sandbox with CIOnly {
       ("2016-11-21", 2, 8)
     ))
   }
+
+  it should "copy from csv (delimiter = ',')" in { conn =>
+    skiplIfLocalEnvironment()
+
+    // create bucket
+    val dummyCredentials = Credentials.WithKey("AKIAXXXXXXXXXXXXXXX", "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY")
+    val s3Service = new S3ServiceImpl(Global.s3Endpoint)
+    val s3Client = s3Service.mkClient(dummyCredentials)
+
+    s3Client.createBucket("bar")
+
+    // create target table
+    conn.createStatement().execute("create table bar(d date, cnt int, sum_a int)")
+
+    // prepare data
+    val csv = """"2017-11-28","42","43"
+                |"2017-11-29","44","45"
+                |""".stripMargin
+    s3Client.putObject("bar", "unloaded_0000_part_00", csv)
+    s3Client.putObject("bar", "unloaded_manifest", """{"entries":[{"url":"http://localhost:9444/bar/unloaded_0000_part_00"}]}""")
+
+    conn.createStatement().execute(
+      s"""copy bar from '${Global.s3Scheme}bar/unloaded_manifest'
+         |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |manifest
+         |delimiter as ','
+         |removequotes
+         |dateformat 'auto'""".stripMargin
+    )
+
+    val resultSet = conn.createStatement().executeQuery("select * from bar order by d")
+    val result = Iterator.continually(resultSet).takeWhile(_.next()).map { rs =>
+      val sdf = new SimpleDateFormat("yyyy-MM-dd")
+      (sdf.format(rs.getDate("d")), rs.getInt("cnt"), rs.getInt("sum_a"))
+    }.toList
+
+    assert(result == List(
+      ("2017-11-28", 42, 43),
+      ("2017-11-29", 44, 45)
+    ))
+  }
 }

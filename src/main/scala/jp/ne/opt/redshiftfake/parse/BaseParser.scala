@@ -7,9 +7,7 @@ import scala.util.parsing.combinator.RegexParsers
 
 trait BaseParser extends RegexParsers {
   val identifier = """[_a-zA-Z]\w*"""
-  val quotedIdentifier = "\"".? ~> identifier.r <~ "\"".? ^^ {
-    _.replaceAll("\"", "")
-  }
+  val quotedIdentifier = "\"".? ~> identifier.r <~ "\"".?
 
   val space = """\s*"""
 
