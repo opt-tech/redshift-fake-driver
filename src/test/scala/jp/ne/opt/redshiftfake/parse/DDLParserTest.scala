@@ -22,4 +22,10 @@ class DDLParserTest extends FlatSpec {
 
     assert(DDLParser.sanitize(ddl) == expected)
   }
+
+  it should "drop alter table append statements" in {
+    assert(DDLParser.sanitize("ALTER TABLE sales APPEND FROM sales_monthly") == "")
+    assert(DDLParser.sanitize("ALTER TABLE sales APPEND FROM sales_monthly ignoreextra") == "")
+    assert(DDLParser.sanitize("ALTER TABLE sales APPEND FROM sales_monthly FILLTARGET") == "")
+  }
 }
