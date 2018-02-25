@@ -5,11 +5,11 @@ import jp.ne.opt.redshiftfake._
 object CopyCommandParser extends BaseParser {
   case class TableAndSchemaName(schemaName: Option[String], tableName: String)
 
-  val tableNameParser = ((quotedIdentifier <~ ".").? ~ quotedIdentifier) ^^ {
+  val tableNameParser = ((quotedIdentifierParser <~ ".").? ~ quotedIdentifierParser) ^^ {
     case ~(schemaName, tableName) => TableAndSchemaName(schemaName, tableName)
   }
 
-  val columnListParser = "(" ~> ((quotedIdentifier <~ s",$space".r).* ~ quotedIdentifier) <~ ")" ^^ {
+  val columnListParser = "(" ~> ((quotedIdentifierParser <~ s",$space".r).* ~ quotedIdentifierParser) <~ ")" ^^ {
     case ~(init, last) => init :+ last
   }
 

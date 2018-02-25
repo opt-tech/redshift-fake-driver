@@ -5,9 +5,9 @@ import scala.language.implicitConversions
 object DDLParser extends BaseParser {
 
   val distStyleRegex = s"(?i)DISTSTYLE$space(EVEN|KEY|ALL)".r
-  val distKeyRegex = s"(?i)DISTKEY$space\\($space$identifier$space\\)".r
+  val distKeyRegex = s"(?i)DISTKEY$space\\($space$quotedIdentifier$space\\)".r
   val sortKeyRegex = {
-    val columnsRegex = s"$space$identifier($space,$space$identifier)*$space"
+    val columnsRegex = s"$space$quotedIdentifier($space,$space$quotedIdentifier)*$space"
 
     s"(?i)(COMPOUND|INTERLEAVED)?${space}SORTKEY$space\\($columnsRegex\\)".r
   }
