@@ -22,4 +22,24 @@ class DDLParserTest extends FlatSpec {
 
     assert(DDLParser.sanitize(ddl) == expected)
   }
+
+  it should "sanitize DDL with quoted identifier" in {
+    val ddl =
+      """CREATE TEMPORARY TABLE test_table
+        |(
+        |  "test_identifier" INT NOT NULL,
+        |)
+        |DISTKEY("test_identifier")
+        |SORTKEY("test_identifier");
+        |""".stripMargin
+
+    val expected =
+      """CREATE TEMPORARY TABLE test_table
+        |(
+        |  "test_identifier" INT NOT NULL,
+        |);
+        |""".stripMargin
+
+    assert(DDLParser.sanitize(ddl) == expected)
+  }
 }
