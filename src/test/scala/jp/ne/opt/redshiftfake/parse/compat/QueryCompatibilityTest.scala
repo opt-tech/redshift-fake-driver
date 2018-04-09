@@ -79,5 +79,14 @@ class QueryCompatibilityTest extends FlatSpec {
         "ELSE 0 END " +
         "FROM sales"))
   }
+
+  it should "convert alter table add column to postgres equivalents" in {
+    val alterTableAddColumn = "ALTER TABLE transportUsageFact ADD COLUMN loadTimestamp TIMESTAMP DEFAULT GETDATE() NOT NULL"
+
+    assert(QueryCompatibilityUnderTest.dropIncompatibilities(alterTableAddColumn)
+      .equalsIgnoreCase("ALTER TABLE transportUsageFact ADD COLUMN loadTimestamp TIMESTAMP; " +
+        "ALTER TABLE transportUsageFact ALTER COLUMN loadTimestamp SET DEFAULT GETDATE();" +
+        "ALTER TABLE transportUsageFact ALTER COLUMN loadTimestamp SET NOT NULL"))
+  }
 }
 
