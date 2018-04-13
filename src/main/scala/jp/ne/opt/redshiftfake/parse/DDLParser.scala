@@ -4,6 +4,8 @@ import scala.language.implicitConversions
 
 object DDLParser extends BaseParser {
 
+  val alterTableHandler = new AlterTableHandler
+
   val distStyleRegex = s"(?i)DISTSTYLE$space(EVEN|KEY|ALL)".r
   val distKeyRegex = s"(?i)DISTKEY$space\\($space$quotedIdentifier$space\\)".r
   val sortKeyRegex = {
@@ -14,8 +16,16 @@ object DDLParser extends BaseParser {
   val encodeRegex = s"(?i)${space}ENCODE$space$identifier$space".r
 
   def sanitize(ddl: String): String = {
-    Seq(distStyleRegex, distKeyRegex, sortKeyRegex, encodeRegex).foldLeft(ddl) { (current, regex) =>
+
+    var sanitized = Seq(distStyleRegex, distKeyRegex, sortKeyRegex, encodeRegex).foldLeft(ddl) { (current, regex) =>
       regex.replaceAllIn(current, "")
+    }
+
+    if(alterTableHandler.matches(sanitized)){
+      alterTableHandler.handle(sanitized)
+    }
+    else {
+      sanitized
     }
   }
 }
