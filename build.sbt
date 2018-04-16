@@ -1,5 +1,6 @@
 import Deps._
 import Helpers._
+import sbtassembly.AssemblyPlugin.autoImport._
 
 val scala210 = "2.10.7"
 
@@ -13,7 +14,7 @@ licenses += "Apache 2" -> url("https://raw.githubusercontent.com/opt-tech/redshi
 
 organization := "jp.ne.opt"
 
-version := "1.0.8-SNAPSHOT"
+version := "1.0.7-SNAPSHOT"
 
 scalacOptions ++= Seq(
   "-deprecation",
