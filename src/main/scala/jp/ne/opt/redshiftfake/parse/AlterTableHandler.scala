@@ -31,9 +31,6 @@ class AlterTableHandler extends BaseParser {
 
   val addColumnNotNull = s"(?i)$any*(NOT$space)?NULL".r
 
-  val addColumnDefault = s"(?i)$any*DEFAULT$space".r ~> s"($identifier(\\(\\))|'$identifier')".r <~ s"$any*".r
-
-
   def matches(sql: String): Boolean ={
     return parse(alterTableRegex, sql).successful
   }
@@ -46,20 +43,15 @@ class AlterTableHandler extends BaseParser {
 
       var baseAddColumnStatement = parse(addColumn, sql).get
 
-      val withDefault = parse(addColumnDefault, sql)
+      val defaultOperand = DefaultParser.matches(sql)
 
-      if(withDefault.successful){
-        val defaultValue = withDefault.get
-
+      if(defaultOperand){
         val parsedDefaultValue =
-          if(defaultValue.contains("(")){
-            //Parse the function and convert if necessary
-            val parsed = CCJSqlParserUtil.parse("SELECT " + defaultValue)
-            parsed.accept(new CompatibilityHandler)
-            parsed.toString.replace("SELECT ", "")
+          if(DefaultParser.isFunction(sql)){
+            DefaultParser.convertFunction(sql).get._2
           }
           else {
-            defaultValue
+            DefaultParser.getOperand(sql)
           }
 
         var alterTableStatementBase =

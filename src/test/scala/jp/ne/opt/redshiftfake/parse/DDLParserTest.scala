@@ -35,7 +35,6 @@ class DDLParserTest extends FlatSpec {
 
         stripMargin
     val expected =
-
       """CREATE TEMPORARY TABLE test_table
           |(
           |  "test_identifier" INT NOT NULL,
@@ -43,8 +42,33 @@ class DDLParserTest extends FlatSpec {
           |""".stripMargin
 
     assert(DDLParser.
-
       sanitize(ddl) == expected)
+  }
+
+  it should "Convert default functions in create table statements" in {
+    val ddl =
+      """
+        |CREATE TABLE foo_bar(
+        |"installed_by" VARCHAR(100) NOT NULL,
+        |"installed_on" TIMESTAMP NOT NULL DEFAULT getdate()
+        |)
+        |DISTSTYLE ALL
+        |DISTKEY(a)
+        |INTERLEAVED SORTKEY(a, b);
+        |""".stripMargin
+
+    val expected =
+      """
+        |CREATE TABLE foo_bar(
+        |"installed_by" VARCHAR(100) NOT NULL,
+        |"installed_on" TIMESTAMP NOT NULL DEFAULT now()
+        |)
+        |
+        |
+        |;
+        |""".stripMargin
+
+    assert(DDLParser.sanitize(ddl) == expected)
   }
 
   it should "convert alter table add column with default to postgres equivalent" in {

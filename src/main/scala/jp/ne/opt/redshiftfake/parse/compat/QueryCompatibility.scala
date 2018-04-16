@@ -10,10 +10,14 @@ trait QueryCompatibility {
     https://github.com/JSQLParser/JSqlParser/issues/570
      */
     val selectStatementWithoutAppoximate = selectStatement.replaceAll("(?i)[, ][ ]*approximate ", " ")
-    val parsed = CCJSqlParserUtil.parse(selectStatementWithoutAppoximate)
-    val handler = new CompatibilityHandler
-    parsed.accept(handler)
+    try {
+      val parsed = CCJSqlParserUtil.parse(selectStatementWithoutAppoximate)
+      val handler = new CompatibilityHandler
+      parsed.accept(handler)
 
-    parsed.toString
+      parsed.toString
+    } catch {
+      case e :Exception => selectStatementWithoutAppoximate
+    }
   }
 }

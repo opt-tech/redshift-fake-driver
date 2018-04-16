@@ -22,9 +22,23 @@ object DDLParser extends BaseParser {
     }
 
     if(alterTableHandler.matches(sanitized)){
-      alterTableHandler.handle(sanitized)
+      val alterTableParsed = alterTableHandler.handle(sanitized)
+      System.out.println("Alter table parsed " + alterTableParsed)
+      alterTableParsed
     }
-    else {
+      //Replace default functions in create table statement
+    else if(DefaultParser.matches(ddl)) {
+      if (DefaultParser.isFunction(ddl)) {
+        val (original, parsedDefaultValue) = DefaultParser.convertFunction(ddl).get
+        System.out.println("Sanitised function with default: " + sanitized.replace(original, parsedDefaultValue))
+        sanitized.replace(original, parsedDefaultValue)
+      }
+      else {
+        sanitized
+      }
+    }
+    else{
+      System.out.println("Sanitised function: " +sanitized)
       sanitized
     }
   }
