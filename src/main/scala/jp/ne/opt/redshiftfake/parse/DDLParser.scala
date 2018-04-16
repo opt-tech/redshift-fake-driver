@@ -13,9 +13,15 @@ object DDLParser extends BaseParser {
   }
   val encodeRegex = s"(?i)${space}ENCODE$space$identifier$space".r
 
+  val identityBigintRegexp = s"(?i)(BIGINT)${space}IDENTITY$space\\($space$number\\,$space$number\\)".r
+
   def sanitize(ddl: String): String = {
-    Seq(distStyleRegex, distKeyRegex, sortKeyRegex, encodeRegex).foldLeft(ddl) { (current, regex) =>
+    val cleanedDdl = Seq(distStyleRegex, distKeyRegex, sortKeyRegex, encodeRegex).foldLeft(ddl) { (current, regex) =>
       regex.replaceAllIn(current, "")
+    }
+
+    Seq(identityBigintRegexp).foldLeft(cleanedDdl) { (current, regex) =>
+      regex.replaceAllIn(current, "bigserial")
     }
   }
 }

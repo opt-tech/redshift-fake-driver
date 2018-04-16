@@ -6,7 +6,7 @@ class DDLParserTest extends FlatSpec {
   it should "sanitize Redshift specific DDL" in {
     val ddl =
       """
-        |CREATE TABLE foo_bar(a int ENCODE ZSTD, b boolean)
+        |CREATE TABLE foo_bar(a int ENCODE ZSTD, b boolean, c bigint IDENTITY(1,1), d bigint IDENTITY(10,5))
         |DISTSTYLE ALL
         |DISTKEY(a)
         |INTERLEAVED SORTKEY(a, b);
@@ -14,7 +14,7 @@ class DDLParserTest extends FlatSpec {
 
     val expected =
       """
-        |CREATE TABLE foo_bar(a int, b boolean)
+        |CREATE TABLE foo_bar(a int, b boolean, c bigserial, d bigserial)
         |
         |
         |;
