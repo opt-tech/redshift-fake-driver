@@ -1,6 +1,5 @@
 import Deps._
 import Helpers._
-import sbtassembly.AssemblyPlugin.autoImport._
 
 val scala210 = "2.10.7"
 
