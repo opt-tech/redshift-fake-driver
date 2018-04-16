@@ -43,23 +43,18 @@ class AlterTableHandler extends BaseParser {
 
       var baseAddColumnStatement = parse(addColumn, sql).get
 
-      val defaultOperand = DefaultParser.matches(sql)
+      val defaultOperand = DefaultParser.handle(sql)
 
-      if(defaultOperand){
-        val parsedDefaultValue =
-          if(DefaultParser.isFunction(sql)){
-            DefaultParser.convertFunction(sql).get._2
-          }
-          else {
-            DefaultParser.getOperand(sql)
-          }
+      if(defaultOperand.nonEmpty){
+
+        val (original, convertedDefaultValue) = defaultOperand.get
 
         var alterTableStatementBase =
           parse(alterTableRegex, sql).get +
             " ALTER COLUMN " +
             parse(columnName, sql).get +
             " SET DEFAULT " +
-            parsedDefaultValue
+            convertedDefaultValue.getOrElse(original)
 
         baseAddColumnStatement += ";" + alterTableStatementBase
       }

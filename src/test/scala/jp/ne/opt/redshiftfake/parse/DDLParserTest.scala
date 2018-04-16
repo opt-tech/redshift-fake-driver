@@ -51,6 +51,7 @@ class DDLParserTest extends FlatSpec {
         |CREATE TABLE foo_bar(
         |"installed_by" VARCHAR(100) NOT NULL,
         |"installed_on" TIMESTAMP NOT NULL DEFAULT getdate()
+        |"freetext" TEXT NOT NULL DEFAULT 'blah'
         |)
         |DISTSTYLE ALL
         |DISTKEY(a)
@@ -62,6 +63,7 @@ class DDLParserTest extends FlatSpec {
         |CREATE TABLE foo_bar(
         |"installed_by" VARCHAR(100) NOT NULL,
         |"installed_on" TIMESTAMP NOT NULL DEFAULT now()
+        |"freetext" TEXT NOT NULL DEFAULT 'blah'
         |)
         |
         |

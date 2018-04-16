@@ -1,6 +1,7 @@
 package jp.ne.opt.redshiftfake.parse
 
 import scala.language.implicitConversions
+import scala.util.matching.Regex
 
 object DDLParser extends BaseParser {
 
@@ -27,19 +28,22 @@ object DDLParser extends BaseParser {
       alterTableParsed
     }
       //Replace default functions in create table statement
-    else if(DefaultParser.matches(ddl)) {
-      if (DefaultParser.isFunction(ddl)) {
-        val (original, parsedDefaultValue) = DefaultParser.convertFunction(ddl).get
-        System.out.println("Sanitised function with default: " + sanitized.replace(original, parsedDefaultValue))
-        sanitized.replace(original, parsedDefaultValue)
-      }
-      else {
-        sanitized
-      }
-    }
-    else{
-      System.out.println("Sanitised function: " +sanitized)
-      sanitized
+    else {
+
+      val defaultRegex = "(?i)DEFAULT ([_a-zA-Z]\\w*(\\(\\))?)".r
+
+      defaultRegex.findAllMatchIn(ddl).foldLeft(sanitized)((x: String, y: Regex.Match) => {
+
+        val defaultValue = DefaultParser.convert(y.group(1))
+        val (original, parsedDefaultValue) = defaultValue.get
+
+        if (parsedDefaultValue.nonEmpty) {
+          System.out.println("Sanitised function with default: " + x.replace(original, parsedDefaultValue.get))
+          x.replace(original, parsedDefaultValue.get)
+        } else {
+          x
+        }
+      })
     }
   }
 }

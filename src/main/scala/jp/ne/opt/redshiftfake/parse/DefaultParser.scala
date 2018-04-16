@@ -8,32 +8,31 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil
   */
 object DefaultParser extends BaseParser {
   val defaultMatcher = s"(?i)$any*DEFAULT$space".r ~> s"$identifier(\\(\\))|'$identifier'".r <~ s"$any*".r
-  val defaultFunctionMatcher = s"(?i)$any*DEFAULT$space".r ~> s"$identifier(\\(\\))".r <~ s"$any*".r
 
-  def matches(sql: String): Boolean = {
-    parse(defaultMatcher, sql).successful
+  def isFunction(defaultOperand: String): Boolean = {
+    defaultOperand.contains("(")
   }
 
-  def isFunction(sql: String): Boolean = {
-    parse(defaultFunctionMatcher, sql).successful
-  }
+  def handle(sql: String) : Option[(String, Option[String])]= {
 
-  def getOperand(sql: String): String = {
-     parse(defaultMatcher, sql).get
-  }
+    val defaultValue = parse(defaultMatcher, sql)
 
-  def convertFunction(sql: String) : Option[(String, String)]= {
-
-    if(!isFunction(sql)){
+    if(defaultValue.successful){
+      convert(defaultValue.get)
+    }else{
       Option.empty
     }
-    else{
-      val defaultValue = parse(defaultFunctionMatcher, sql).get
+  }
 
+  def convert(defaultValue: String) : Option[(String, Option[String])] ={
+    if(isFunction(defaultValue)){
       //Parse the function and convert if necessary
       val parsed = CCJSqlParserUtil.parse ("SELECT " + defaultValue)
       parsed.accept (new CompatibilityHandler)
-      Option.apply(defaultValue, parsed.toString.replace ("SELECT ", ""))
+      Option.apply(defaultValue, Option.apply(parsed.toString.replace ("SELECT ", "")))
+    }
+      else{
+      Option.apply((defaultValue, Option.empty))
     }
   }
 }
