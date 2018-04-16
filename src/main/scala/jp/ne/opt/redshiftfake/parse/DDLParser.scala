@@ -16,11 +16,15 @@ object DDLParser extends BaseParser {
   }
   val encodeRegex = s"(?i)${space}ENCODE$space$identifier$space".r
 
+  val identityRegex = s"(?i)(BIGINT|INT)${space}IDENTITY\\([0-9]*$space,$space[0-9]*\\)".r
+
   def sanitize(ddl: String): String = {
 
     var sanitized = Seq(distStyleRegex, distKeyRegex, sortKeyRegex, encodeRegex).foldLeft(ddl) { (current, regex) =>
       regex.replaceAllIn(current, "")
     }
+
+    sanitized = identityRegex.replaceAllIn(sanitized, "BIGSERIAL")
 
     if(alterTableHandler.matches(sanitized)){
       val alterTableParsed = alterTableHandler.handle(sanitized)

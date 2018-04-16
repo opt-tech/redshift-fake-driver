@@ -45,6 +45,26 @@ class DDLParserTest extends FlatSpec {
       sanitize(ddl) == expected)
   }
 
+  it should "replace identity with serial" in {
+    val ddl =
+      """
+        |CREATE TABLE foo_bar(a BIGINT IDENTITY(6, 99))
+        |DISTSTYLE ALL
+        |DISTKEY(a)
+        |INTERLEAVED SORTKEY(a, b);
+        |""".stripMargin
+
+    val expected =
+      """
+        |CREATE TABLE foo_bar(a BIGSERIAL)
+        |
+        |
+        |;
+        |""".stripMargin
+
+    assert(DDLParser.sanitize(ddl) == expected)
+  }
+
   it should "Convert default functions in create table statements" in {
     val ddl =
       """
