@@ -22,6 +22,7 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil
   * 5) Drop column => jsql? No difference
   * 6) Add Contrainst => No difference
   * 7) Drop Constraint => No difference
+  * 8) Alter column add foreign key -> need to ADD CONSTRAINT somethingfk : TODO
   */
 class AlterTableHandler extends BaseParser {
 
@@ -68,7 +69,7 @@ class AlterTableHandler extends BaseParser {
             " SET NOT NULL"
           }
           else{
-            " SET NULL"
+            " DROP NOT NULL"
           }
 
         val nullStatement =
