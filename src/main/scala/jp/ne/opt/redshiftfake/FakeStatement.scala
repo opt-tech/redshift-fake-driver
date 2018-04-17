@@ -117,7 +117,7 @@ class FakeStatement (
   }
 
   private[this] def switchExecute[A](sql: String)(default: => A, switched: => A): A = {
-    CopyCommandParser.parse(sql).map { command =>
+    new CopyCommandParser().parse(sql).map { command =>
       executeCopy(connection, command, s3Service)
       switched
     }.orElse(UnloadCommandParser.parse(sql).map { command =>
