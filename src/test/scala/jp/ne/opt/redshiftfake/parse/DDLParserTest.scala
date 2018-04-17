@@ -94,27 +94,35 @@ class DDLParserTest extends FlatSpec {
   }
 
   it should "convert alter table add column with default to postgres equivalent" in {
-    val alterTableAddColumn = "ALTER TABLE transportUsageFact ADD COLUMN name VARCHAR(1000) DEFAULT 'anonymous'"
+    val alterTableAddColumn = "ALTER TABLE testDb ADD COLUMN name VARCHAR(1000) DEFAULT 'anonymous'"
 
     assert(DDLParser.sanitize(alterTableAddColumn)
-      == "ALTER TABLE transportUsageFact ADD COLUMN name VARCHAR(1000);" +
-      "ALTER TABLE transportUsageFact ALTER COLUMN name SET DEFAULT 'anonymous'")
+      == "ALTER TABLE testDb ADD COLUMN name VARCHAR(1000);" +
+      "ALTER TABLE testDb ALTER COLUMN name SET DEFAULT 'anonymous'")
+  }
+
+  it should "handle boolean defaults" in {
+    val alterTableAddColumn = "ALTER TABLE testDb ADD COLUMN booleanColumn BOOLEAN DEFAULT false"
+
+    assert(DDLParser.sanitize(alterTableAddColumn)
+      == "ALTER TABLE testDb ADD COLUMN booleanColumn BOOLEAN;" +
+      "ALTER TABLE testDb ALTER COLUMN booleanColumn SET DEFAULT false")
   }
 
   it should "convert alter table add column with null to postgres equivalent" in {
-    val alterTableAddColumn = "ALTER TABLE transportUsageFact ADD COLUMN name VARCHAR (1000) NULL"
+    val alterTableAddColumn = "ALTER TABLE testDb ADD COLUMN name VARCHAR (1000) NULL"
 
     assert(DDLParser.sanitize(alterTableAddColumn)
-      == "ALTER TABLE transportUsageFact ADD COLUMN name VARCHAR (1000);" +
-      "ALTER TABLE transportUsageFact ALTER COLUMN name SET NULL")
+      == "ALTER TABLE testDb ADD COLUMN name VARCHAR (1000);" +
+      "ALTER TABLE testDb ALTER COLUMN name DROP NOT NULL")
   }
 
   it should "convert alter table add column with default and null to postgres equivalents" in {
-    val alterTableAddColumn = "ALTER TABLE transportUsageFact ADD COLUMN loadTimestamp TIMESTAMP DEFAULT GETDATE() NOT NULL"
+    val alterTableAddColumn = "ALTER TABLE testDb ADD COLUMN loadTimestamp TIMESTAMP DEFAULT GETDATE() NOT NULL"
 
     assert(DDLParser.sanitize(alterTableAddColumn)
-      == "ALTER TABLE transportUsageFact ADD COLUMN loadTimestamp TIMESTAMP;" +
-        "ALTER TABLE transportUsageFact ALTER COLUMN loadTimestamp SET DEFAULT now();" +
-        "ALTER TABLE transportUsageFact ALTER COLUMN loadTimestamp SET NOT NULL")
+      == "ALTER TABLE testDb ADD COLUMN loadTimestamp TIMESTAMP;" +
+        "ALTER TABLE testDb ALTER COLUMN loadTimestamp SET DEFAULT now();" +
+        "ALTER TABLE testDb ALTER COLUMN loadTimestamp SET NOT NULL")
   }
 }
