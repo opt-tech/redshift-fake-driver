@@ -22,7 +22,7 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil
   * 5) Drop column => jsql? No difference
   * 6) Add Contrainst => No difference
   * 7) Drop Constraint => No difference
-  * 8) Alter column add foreign key -> need to ADD CONSTRAINT somethingfk : TODO
+  * 8) Alter column add foreign key -> need to ADD CONSTRAINT somethingfk : But this does not work in a transaction. Dropping as it is not enforced by Redshift
   */
 class AlterTableHandler extends BaseParser {
 
@@ -32,6 +32,9 @@ class AlterTableHandler extends BaseParser {
 
   val addColumnNotNull = s"(?i)$any*(NOT$space)?NULL".r
 
+  //Add foreign key
+  val addForeignKey = s"(?i)ALTER${space}TABLE$space($identifier$space)?ADD${space}FOREIGN${space}KEY.*".r
+
   def matches(sql: String): Boolean ={
     return parse(alterTableRegex, sql).successful
   }
@@ -40,7 +43,10 @@ class AlterTableHandler extends BaseParser {
     // Do stuff above and return concatenated statements
     // Can execute handle multiple statements in 1?
 
-    if(parse(addColumn, sql).successful) {
+    if(parse(addForeignKey, sql).successful){
+      ""
+    }
+    else if(parse(addColumn, sql).successful) {
 
       var baseAddColumnStatement = parse(addColumn, sql).get
 

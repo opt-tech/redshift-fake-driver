@@ -125,4 +125,11 @@ class DDLParserTest extends FlatSpec {
         "ALTER TABLE testDb ALTER COLUMN loadTimestamp SET DEFAULT now();" +
         "ALTER TABLE testDb ALTER COLUMN loadTimestamp SET NOT NULL")
   }
+
+  it should "drop add foreign key constraints" in {
+    val alterTableAddColumn = "ALTER TABLE testDb ADD FOREIGN KEY (name) REFERENCES names (id);"
+
+    assert(DDLParser.sanitize(alterTableAddColumn)
+      == "")
+  }
 }
