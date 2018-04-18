@@ -3,7 +3,7 @@ package jp.ne.opt.redshiftfake.parse
 import scala.language.implicitConversions
 import scala.util.matching.Regex
 
-object DDLParser extends BaseParser {
+class DDLParser extends BaseParser {
 
   val alterTableHandler = new AlterTableHandler
 
@@ -38,7 +38,7 @@ object DDLParser extends BaseParser {
 
       defaultRegex.findAllMatchIn(ddl).foldLeft(sanitized)((x: String, y: Regex.Match) => {
 
-        val defaultValue = DefaultParser.convert(y.group(1))
+        val defaultValue = new DefaultParser().convert(y.group(1))
         val (original, parsedDefaultValue) = defaultValue.get
 
         if (parsedDefaultValue.nonEmpty) {

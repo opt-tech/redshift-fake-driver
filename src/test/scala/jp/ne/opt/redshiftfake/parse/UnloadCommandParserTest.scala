@@ -24,7 +24,7 @@ class UnloadCommandParserTest extends FlatSpec {
       addQuotes = false
     )
 
-    assert(UnloadCommandParser.parse(command) == Some(expected))
+    assert(new UnloadCommandParser().parse(command) == Some(expected))
   }
 
   it should "parse Manifest" in {
@@ -35,7 +35,7 @@ class UnloadCommandParserTest extends FlatSpec {
          |MANIFEST;
          |""".stripMargin
 
-    assert(UnloadCommandParser.parse(command).exists(_.createManifest))
+    assert(new UnloadCommandParser().parse(command).exists(_.createManifest))
   }
 
   it should "parse delimiter" in {
@@ -46,7 +46,7 @@ class UnloadCommandParserTest extends FlatSpec {
          |DELIMITER ',';
          |""".stripMargin
 
-    assert(UnloadCommandParser.parse(command).map(_.delimiter) == Some(','))
+    assert(new UnloadCommandParser().parse(command).map(_.delimiter) == Some(','))
   }
 
   it should "parse addQuotes" in {
@@ -57,7 +57,7 @@ class UnloadCommandParserTest extends FlatSpec {
          |ADDQUOTES;
          |""".stripMargin
 
-    assert(UnloadCommandParser.parse(command).exists(_.addQuotes))
+    assert(new UnloadCommandParser().parse(command).exists(_.addQuotes))
   }
 
   it should "parse multiple options" in {
@@ -70,8 +70,8 @@ class UnloadCommandParserTest extends FlatSpec {
          |DELIMITER ',';
          |""".stripMargin
 
-    assert(UnloadCommandParser.parse(command).exists(_.addQuotes))
-    assert(UnloadCommandParser.parse(command).exists(_.createManifest))
-    assert(UnloadCommandParser.parse(command).map(_.delimiter) == Some(','))
+    assert(new UnloadCommandParser().parse(command).exists(_.addQuotes))
+    assert(new UnloadCommandParser().parse(command).exists(_.createManifest))
+    assert(new UnloadCommandParser().parse(command).map(_.delimiter) == Some(','))
   }
 }

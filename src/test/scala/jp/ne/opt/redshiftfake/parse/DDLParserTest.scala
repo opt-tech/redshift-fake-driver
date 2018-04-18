@@ -20,7 +20,7 @@ class DDLParserTest extends FlatSpec {
         |;
         |""".stripMargin
 
-    assert(DDLParser.sanitize(ddl) == expected)
+    assert(new DDLParser().sanitize(ddl) == expected)
   }
 
   it should "sanitize DDL with quoted identifier" in {
@@ -41,8 +41,7 @@ class DDLParserTest extends FlatSpec {
           |);
           |""".stripMargin
 
-    assert(DDLParser.
-      sanitize(ddl) == expected)
+    assert(new DDLParser().sanitize(ddl) == expected)
   }
 
   it should "replace identity with serial" in {
@@ -62,7 +61,7 @@ class DDLParserTest extends FlatSpec {
         |;
         |""".stripMargin
 
-    assert(DDLParser.sanitize(ddl) == expected)
+    assert(new DDLParser().sanitize(ddl) == expected)
   }
 
   it should "Convert default functions in create table statements" in {
@@ -90,13 +89,13 @@ class DDLParserTest extends FlatSpec {
         |;
         |""".stripMargin
 
-    assert(DDLParser.sanitize(ddl) == expected)
+    assert(new DDLParser().sanitize(ddl) == expected)
   }
 
   it should "convert alter table add column with default to postgres equivalent" in {
     val alterTableAddColumn = "ALTER TABLE testDb ADD COLUMN name VARCHAR(1000) DEFAULT 'anonymous'"
 
-    assert(DDLParser.sanitize(alterTableAddColumn)
+    assert(new DDLParser().sanitize(alterTableAddColumn)
       == "ALTER TABLE testDb ADD COLUMN name VARCHAR(1000);" +
       "ALTER TABLE testDb ALTER COLUMN name SET DEFAULT 'anonymous'")
   }
@@ -104,7 +103,7 @@ class DDLParserTest extends FlatSpec {
   it should "handle boolean defaults" in {
     val alterTableAddColumn = "ALTER TABLE testDb ADD COLUMN booleanColumn BOOLEAN DEFAULT false"
 
-    assert(DDLParser.sanitize(alterTableAddColumn)
+    assert(new DDLParser().sanitize(alterTableAddColumn)
       == "ALTER TABLE testDb ADD COLUMN booleanColumn BOOLEAN;" +
       "ALTER TABLE testDb ALTER COLUMN booleanColumn SET DEFAULT false")
   }
@@ -112,7 +111,7 @@ class DDLParserTest extends FlatSpec {
   it should "convert alter table add column with null to postgres equivalent" in {
     val alterTableAddColumn = "ALTER TABLE testDb ADD COLUMN name VARCHAR (1000) NULL"
 
-    assert(DDLParser.sanitize(alterTableAddColumn)
+    assert(new DDLParser().sanitize(alterTableAddColumn)
       == "ALTER TABLE testDb ADD COLUMN name VARCHAR (1000);" +
       "ALTER TABLE testDb ALTER COLUMN name DROP NOT NULL")
   }
@@ -120,7 +119,7 @@ class DDLParserTest extends FlatSpec {
   it should "convert alter table add column with default and null to postgres equivalents" in {
     val alterTableAddColumn = "ALTER TABLE testDb ADD COLUMN loadTimestamp TIMESTAMP DEFAULT GETDATE() NOT NULL"
 
-    assert(DDLParser.sanitize(alterTableAddColumn)
+    assert(new DDLParser().sanitize(alterTableAddColumn)
       == "ALTER TABLE testDb ADD COLUMN loadTimestamp TIMESTAMP;" +
         "ALTER TABLE testDb ALTER COLUMN loadTimestamp SET DEFAULT now();" +
         "ALTER TABLE testDb ALTER COLUMN loadTimestamp SET NOT NULL")
@@ -129,7 +128,7 @@ class DDLParserTest extends FlatSpec {
   it should "drop add foreign key constraints" in {
     val alterTableAddColumn = "ALTER TABLE testDb ADD FOREIGN KEY (name) REFERENCES names (id);"
 
-    assert(DDLParser.sanitize(alterTableAddColumn)
+    assert(new DDLParser().sanitize(alterTableAddColumn)
       == "")
   }
 }

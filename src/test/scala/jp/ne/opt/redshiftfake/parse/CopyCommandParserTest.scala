@@ -191,4 +191,5 @@ class CopyCommandParserTest extends FlatSpec {
 
     assert(new CopyCommandParser().parse(command).map(_.nullAs) == Some("\u000e"))
   }
+
 }

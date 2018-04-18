@@ -6,7 +6,7 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil
 /**
   * Created by frankfarrell on 16/04/2018.
   */
-object DefaultParser extends BaseParser {
+class DefaultParser extends BaseParser {
   val defaultMatcher = s"(?i)$any*DEFAULT$space".r ~> s"$identifier(\\(\\))|'$identifier'|$identifier".r <~ s"$any*".r
 
   def isFunction(defaultOperand: String): Boolean = {

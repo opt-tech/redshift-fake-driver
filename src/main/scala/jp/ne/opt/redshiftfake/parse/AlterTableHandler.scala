@@ -50,7 +50,7 @@ class AlterTableHandler extends BaseParser {
 
       var baseAddColumnStatement = parse(addColumn, sql).get
 
-      val defaultOperand = DefaultParser.handle(sql)
+      val defaultOperand = new DefaultParser().handle(sql)
 
       if(defaultOperand.nonEmpty){
 
