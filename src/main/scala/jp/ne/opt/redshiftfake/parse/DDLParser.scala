@@ -5,18 +5,18 @@ import scala.util.matching.Regex
 
 class DDLParser extends BaseParser {
 
-  val alterTableHandler = new AlterTableHandler
+  private[this] val alterTableHandler = new AlterTableHandler
 
-  val distStyleRegex = s"(?i)DISTSTYLE$space(EVEN|KEY|ALL)".r
-  val distKeyRegex = s"(?i)DISTKEY$space\\($space$quotedIdentifier$space\\)".r
-  val sortKeyRegex = {
+  private[this] val distStyleRegex = s"(?i)DISTSTYLE$space(EVEN|KEY|ALL)".r
+  private[this] val distKeyRegex = s"(?i)DISTKEY$space\\($space$quotedIdentifier$space\\)".r
+  private[this] val sortKeyRegex = {
     val columnsRegex = s"$space$quotedIdentifier($space,$space$quotedIdentifier)*$space"
 
     s"(?i)(COMPOUND|INTERLEAVED)?${space}SORTKEY$space\\($columnsRegex\\)".r
   }
-  val encodeRegex = s"(?i)${space}ENCODE$space$identifier$space".r
+  private[this] val encodeRegex = s"(?i)${space}ENCODE$space$identifier$space".r
 
-  val identityRegex = s"(?i)(BIGINT|INT)${space}IDENTITY\\([0-9]*$space,$space[0-9]*\\)".r
+  private[this] val identityRegex = s"(?i)(BIGINT|INT)${space}IDENTITY\\([0-9]*$space,$space[0-9]*\\)".r
 
   def sanitize(ddl: String): String = {
 
@@ -26,12 +26,12 @@ class DDLParser extends BaseParser {
 
     sanitized = identityRegex.replaceAllIn(sanitized, "BIGSERIAL")
 
-    if(alterTableHandler.matches(sanitized)){
+    if(alterTableHandler.matches(sanitized)) {
       val alterTableParsed = alterTableHandler.handle(sanitized)
       System.out.println("Alter table parsed " + alterTableParsed)
       alterTableParsed
     }
-      //Replace default functions in create table statement
+    //Replace default functions in create table statement
     else {
 
       val defaultRegex = "(?i)DEFAULT ([_a-zA-Z]\\w*(\\(\\))?)".r
