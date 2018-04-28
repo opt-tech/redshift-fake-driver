@@ -8,9 +8,9 @@ class CopyCommandParserTest extends FlatSpec {
   it should "parse minimal COPY command" in {
     val command =
       s"""
-        |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
-        |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY';
-        |""".stripMargin
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY';
+         |""".stripMargin
 
     val expected = CopyCommand(
       schemaName = Some("public"),
@@ -29,7 +29,7 @@ class CopyCommandParserTest extends FlatSpec {
       nullAs = "\u000e"
     )
 
-    assert(CopyCommandParser.parse(command) == Some(expected))
+    assert(new CopyCommandParser().parse(command) == Some(expected))
   }
 
   it should "parse JSON format" in {
@@ -47,8 +47,8 @@ class CopyCommandParserTest extends FlatSpec {
         |JSON '${Global.s3Scheme}some-bucket/path/to/jsonpaths.txt';
         |""".stripMargin
 
-    assert(CopyCommandParser.parse(command).map(_.copyFormat) == Some(CopyFormat.Json(None)))
-    assert(CopyCommandParser.parse(commandWithJsonpath).map(_.copyFormat) == Some(CopyFormat.Json(Some(S3Location("some-bucket", "path/to/jsonpaths.txt")))))
+    assert(new CopyCommandParser().parse(command).map(_.copyFormat) == Some(CopyFormat.Json(None)))
+    assert(new CopyCommandParser().parse(commandWithJsonpath).map(_.copyFormat) == Some(CopyFormat.Json(Some(S3Location("some-bucket", "path/to/jsonpaths.txt")))))
   }
 
   it should "parse date format" in {
@@ -66,8 +66,8 @@ class CopyCommandParserTest extends FlatSpec {
          |DATEFORMAT 'YYYY/MM/DD';
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(auto).map(_.dateFormatType) == Some(DateFormatType.Auto))
-    assert(CopyCommandParser.parse(custom).map(_.dateFormatType) == Some(DateFormatType.Custom("YYYY/MM/DD")))
+    assert(new CopyCommandParser().parse(auto).map(_.dateFormatType) == Some(DateFormatType.Auto))
+    assert(new CopyCommandParser().parse(custom).map(_.dateFormatType) == Some(DateFormatType.Custom("YYYY/MM/DD")))
   }
 
   it should "parse time format" in {
@@ -99,10 +99,10 @@ class CopyCommandParserTest extends FlatSpec {
          |TIMEFORMAT 'YYYY/MM/DD HH:MI:SS.SSS';
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(auto).map(_.timeFormatType) == Some(TimeFormatType.Auto))
-    assert(CopyCommandParser.parse(epochsecs).map(_.timeFormatType) == Some(TimeFormatType.Epochsecs))
-    assert(CopyCommandParser.parse(epochmillisecs).map(_.timeFormatType) == Some(TimeFormatType.EpochMillisecs))
-    assert(CopyCommandParser.parse(custom).map(_.timeFormatType) == Some(TimeFormatType.Custom("YYYY/MM/DD HH:MI:SS.SSS")))
+    assert(new CopyCommandParser().parse(auto).map(_.timeFormatType) == Some(TimeFormatType.Auto))
+    assert(new CopyCommandParser().parse(epochsecs).map(_.timeFormatType) == Some(TimeFormatType.Epochsecs))
+    assert(new CopyCommandParser().parse(epochmillisecs).map(_.timeFormatType) == Some(TimeFormatType.EpochMillisecs))
+    assert(new CopyCommandParser().parse(custom).map(_.timeFormatType) == Some(TimeFormatType.Custom("YYYY/MM/DD HH:MI:SS.SSS")))
   }
 
   it should "parse manifest" in {
@@ -113,7 +113,7 @@ class CopyCommandParserTest extends FlatSpec {
          |MANIFEST;
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(command).map(_.copyFormat) == Some(CopyFormat.Manifest(S3Location("some-bucket", "path/to/unloaded_manifest"))))
+    assert(new CopyCommandParser().parse(command).map(_.copyFormat) == Some(CopyFormat.Manifest(S3Location("some-bucket", "path/to/unloaded_manifest"))))
   }
 
   it should "parse emptyAsNull" in {
@@ -124,7 +124,7 @@ class CopyCommandParserTest extends FlatSpec {
          |EMPTYASNULL;
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(command).map(_.emptyAsNull) == Some(true))
+    assert(new CopyCommandParser().parse(command).map(_.emptyAsNull) == Some(true))
   }
 
   it should "parse quoted schema and table names" in {
@@ -136,8 +136,8 @@ class CopyCommandParserTest extends FlatSpec {
          |manifest
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(command).map(_.schemaName) == Some(Some("public")))
-    assert(CopyCommandParser.parse(command).map(_.tableName) == Some("mytable"))
+    assert(new CopyCommandParser().parse(command).map(_.schemaName) == Some(Some("public")))
+    assert(new CopyCommandParser().parse(command).map(_.tableName) == Some("mytable"))
   }
 
   it should "parse delimiter from copy command" in {
@@ -150,7 +150,7 @@ class CopyCommandParserTest extends FlatSpec {
          |manifest
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(command).map(_.delimiter) == Some(','))
+    assert(new CopyCommandParser().parse(command).map(_.delimiter) == Some(','))
   }
 
   it should "set default delimiter correctly" in {
@@ -163,7 +163,7 @@ class CopyCommandParserTest extends FlatSpec {
          |manifest
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(command).map(_.delimiter) == Some('|'))
+    assert(new CopyCommandParser().parse(command).map(_.delimiter) == Some('|'))
   }
 
   it should "parse 'null as' from copy command" in {
@@ -176,7 +176,7 @@ class CopyCommandParserTest extends FlatSpec {
          |manifest
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(command).map(_.nullAs) == Some("@NULL@"))
+    assert(new CopyCommandParser().parse(command).map(_.nullAs) == Some("@NULL@"))
   }
 
   it should "set default 'null as' correctly" in {
@@ -189,6 +189,7 @@ class CopyCommandParserTest extends FlatSpec {
          |manifest
          |""".stripMargin
 
-    assert(CopyCommandParser.parse(command).map(_.nullAs) == Some("\u000e"))
+    assert(new CopyCommandParser().parse(command).map(_.nullAs) == Some("\u000e"))
   }
+
 }

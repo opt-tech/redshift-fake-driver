@@ -3,7 +3,7 @@ package jp.ne.opt.redshiftfake.parse
 import jp.ne.opt.redshiftfake.UnloadCommand
 import jp.ne.opt.redshiftfake.parse.compat.QueryCompatibility
 
-object UnloadCommandParser extends BaseParser with QueryCompatibility {
+class UnloadCommandParser extends BaseParser with QueryCompatibility {
 
   object selectStatementParser extends Parser[String] {
     def apply(in: Input): ParseResult[String] = {

@@ -2,7 +2,8 @@ package jp.ne.opt.redshiftfake.parse
 
 import jp.ne.opt.redshiftfake._
 
-object CopyCommandParser extends BaseParser {
+class CopyCommandParser extends BaseParser {
+
   case class TableAndSchemaName(schemaName: Option[String], tableName: String)
 
   val tableNameParser = ((quotedIdentifierParser <~ ".").? ~ quotedIdentifierParser) ^^ {
