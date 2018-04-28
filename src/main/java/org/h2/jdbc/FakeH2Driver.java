@@ -23,10 +23,15 @@ public class FakeH2Driver extends Driver {
 
     @Override
     public Connection connect(String url, Properties info) throws SQLException {
-        return new FakeConnection(
-                DriverManager.getConnection(url.replaceFirst(urlPrefix, "jdbc:h2"), info),
-                new S3ServiceImpl(Global.s3Endpoint())
-        );
+        if (url.startsWith(urlPrefix)) {
+            String h2Url = url.replaceFirst(urlPrefix, "jdbc:h2");
+            return new FakeConnection(
+                    DriverManager.getConnection(h2Url, info),
+                    new S3ServiceImpl(Global.s3Endpoint())
+            );
+        } else {
+            return null;
+        }
     }
 
     @Override
