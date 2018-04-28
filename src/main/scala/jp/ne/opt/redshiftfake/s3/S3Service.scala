@@ -43,8 +43,9 @@ class S3ServiceImpl(endpoint: String) extends S3Service {
     }
 
     client.setS3ClientOptions({
-      val options = new S3ClientOptions
-      options.setPathStyleAccess(true)
+      val options = S3ClientOptions.builder()
+        .setPathStyleAccess(true)
+        .build()
 
       // for compatibility
       val setChunkedEncodingDisabled = "setChunkedEncodingDisabled"
@@ -53,7 +54,6 @@ class S3ServiceImpl(endpoint: String) extends S3Service {
         clazz.getMethod(setChunkedEncodingDisabled, classOf[Boolean]).invoke(options, java.lang.Boolean.valueOf(true))
       }
 
-      options.setPathStyleAccess(true)
       options
     })
 

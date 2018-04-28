@@ -1,8 +1,5 @@
 package jp.ne.opt.redshiftfake.parse
 
-import jp.ne.opt.redshiftfake.parse.compat.CompatibilityHandler
-import net.sf.jsqlparser.parser.CCJSqlParserUtil
-
 /**
   * Created by frankfarrell on 01/03/2018.
   *
@@ -35,8 +32,8 @@ class AlterTableHandler extends BaseParser {
   //Add foreign key
   val addForeignKey = s"(?i)ALTER${space}TABLE$space($identifier$space)?ADD${space}FOREIGN${space}KEY.*".r
 
-  def matches(sql: String): Boolean ={
-    return parse(alterTableRegex, sql).successful
+  def matches(sql: String): Boolean = {
+    parse(alterTableRegex, sql).successful
   }
 
   def handle(sql: String): String ={
@@ -89,7 +86,7 @@ class AlterTableHandler extends BaseParser {
       baseAddColumnStatement
     }
     //All other cases require no change
-    else{
+    else {
       sql
     }
   }

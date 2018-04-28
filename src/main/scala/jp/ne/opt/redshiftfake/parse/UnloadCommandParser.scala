@@ -36,11 +36,11 @@ class UnloadCommandParser extends BaseParser with QueryCompatibility {
     }
   }
 
-  val addQuotesParser = s"$any*(?i)ADDQUOTES$any*".r
+  private[this] val addQuotesParser = s"$any*(?i)ADDQUOTES$any*".r
 
-  val manifestParser = s"$any*(?i)MANIFEST$any*".r
+  private[this] val manifestParser = s"$any*(?i)MANIFEST$any*".r
 
-  val statementParser = "(?i)UNLOAD".r ~> selectStatementParser ^^ { s =>
+  private[this] val statementParser = "(?i)UNLOAD".r ~> selectStatementParser ^^ { s =>
     val unescaped = s.replace("""\'""", "'")
     unescaped
   }

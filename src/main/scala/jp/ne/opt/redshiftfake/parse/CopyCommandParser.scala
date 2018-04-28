@@ -6,28 +6,28 @@ class CopyCommandParser extends BaseParser {
 
   case class TableAndSchemaName(schemaName: Option[String], tableName: String)
 
-  val tableNameParser = ((quotedIdentifierParser <~ ".").? ~ quotedIdentifierParser) ^^ {
+  private[this] val tableNameParser = ((quotedIdentifierParser <~ ".").? ~ quotedIdentifierParser) ^^ {
     case ~(schemaName, tableName) => TableAndSchemaName(schemaName, tableName)
   }
 
-  val columnListParser = "(" ~> ((quotedIdentifierParser <~ s",$space".r).* ~ quotedIdentifierParser) <~ ")" ^^ {
+  private[this] val columnListParser = "(" ~> ((quotedIdentifierParser <~ s",$space".r).* ~ quotedIdentifierParser) <~ ")" ^^ {
     case ~(init, last) => init :+ last
   }
 
-  val dataSourceParser = {
+  private[this] val dataSourceParser = {
     def s3SourceParser = "'" ~> s3LocationParser <~ "'" ^^ CopyDataSource.S3
     s3SourceParser
   }
 
-  val copyFormatParser = {
+  private[this] val copyFormatParser = {
     def json = ("(?i)JSON".r ~> "(?i)AS".r.? ~> ("'" ~> s3LocationParser <~ "'").?) ^^ CopyFormat.Json
 
     "(?i)FORMAT".r.? ~> "(?i)AS".r.? ~> json.? ^^ (_.getOrElse(CopyFormat.Default))
   }
 
-  val nullAsParser = s"$any*(?i)NULL$space+AS".r ~> "'" ~> """[^']*""".r <~ "'" <~ s"$any*".r
+  private[this] val nullAsParser = s"$any*(?i)NULL$space+AS".r ~> "'" ~> """[^']*""".r <~ "'" <~ s"$any*".r
 
-  val timeFormatParser: Parser[TimeFormatType] = {
+  private[this] val timeFormatParser: Parser[TimeFormatType] = {
     s"$any*(?i)TIMEFORMAT".r ~> "(?i)AS".r.? ~>
       ("'auto'" | "'epochsecs'" | "'epochmillisecs'" | "'" ~> """[ \w./:,-]+""".r <~ "'") <~
       s"$any*".r ^^ {
@@ -38,18 +38,18 @@ class CopyCommandParser extends BaseParser {
     }
   }
 
-  val dateFormatParser: Parser[DateFormatType] = {
+  private[this] val dateFormatParser: Parser[DateFormatType] = {
     s"$any*(?i)DATEFORMAT".r ~> "(?i)AS".r.? ~> ("'auto'" | "'" ~> """[ \w./:,-]+""".r <~ "'") <~ s"$any*".r ^^ {
       case "'auto'" => DateFormatType.Auto
       case pattern => DateFormatType.Custom(pattern)
     }
   }
 
-  val manifestParser = {
+  private[this] val manifestParser = {
     s"$any*(?i)MANIFEST$any*".r
   }
 
-  val emptyAsNullParser = {
+  private[this] val emptyAsNullParser = {
     s"$any*(?i)EMPTYASNULL$any*".r
   }
 
