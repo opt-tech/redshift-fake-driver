@@ -23,10 +23,15 @@ public class FakePostgresqlDriver extends Driver {
 
     @Override
     public Connection connect(String url, Properties info) throws SQLException {
-        return new FakeConnection(
-                DriverManager.getConnection(url.replaceFirst(urlPrefix, "jdbc:postgresql"), info),
-                new S3ServiceImpl(Global.s3Endpoint())
-        );
+        if (url.startsWith(urlPrefix)) {
+            String postgresUrl = url.replaceFirst(urlPrefix, "jdbc:postgresql");
+            return new FakeConnection(
+                    DriverManager.getConnection(postgresUrl, info),
+                    new S3ServiceImpl(Global.s3Endpoint())
+            );
+        } else {
+            return null;
+        }
     }
 
     @Override
