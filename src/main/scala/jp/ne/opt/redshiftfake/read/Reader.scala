@@ -43,6 +43,14 @@ class Reader(copyCommand: CopyCommand, columnDefinitions: Seq[ColumnDefinition],
           val csvReader = new CsvReader(line, copyCommand.delimiter, copyCommand.nullAs)
           csvReader.toRow
         })(collection.breakOut)
+      case CopyFormat.Default =>
+        (for {
+          content <- contents
+          line <- content.trim.lines
+        } yield {
+          val csvReader = new CsvReader(line, copyCommand.delimiter, copyCommand.nullAs)
+          csvReader.toRow
+        })(collection.breakOut)
       case _ => Nil
     }
   }
