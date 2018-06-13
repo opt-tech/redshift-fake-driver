@@ -192,4 +192,28 @@ class CopyCommandParserTest extends FlatSpec {
     assert(new CopyCommandParser().parse(command).map(_.nullAs) == Some("\u000e"))
   }
 
+  it should "parse aws_role_arn from COPY command" in {
+    val command =
+      s"""
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
+         |CREDENTIALS 'aws_role_arn=arn:aws:iam::12345:role/some-role';
+         |""".stripMargin
+
+    val expected = CopyCommand(
+      schemaName = Some("public"),
+      tableName = "_foo_42",
+      columnList = None,
+      dataSource = CopyDataSource.S3(S3Location("some-bucket", "path/to/data/foo-bar.csv")),
+      credentials = Credentials.WithRole("arn:aws:iam::12345:role/some-role"),
+      copyFormat = CopyFormat.Default,
+      dateFormatType = DateFormatType.Default,
+      timeFormatType = TimeFormatType.Default,
+      emptyAsNull = false,
+      delimiter = '|',
+      nullAs = "\u000e"
+    )
+
+    assert(new CopyCommandParser().parse(command) == Some(expected))
+  }
+
 }
