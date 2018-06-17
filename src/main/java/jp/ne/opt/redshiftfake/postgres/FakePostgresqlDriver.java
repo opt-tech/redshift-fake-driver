@@ -3,6 +3,7 @@ package jp.ne.opt.redshiftfake.postgres;
 import jp.ne.opt.redshiftfake.FakeConnection;
 import jp.ne.opt.redshiftfake.Global;
 import jp.ne.opt.redshiftfake.s3.S3ServiceImpl;
+import jp.ne.opt.redshiftfake.views.SystemViews;
 import org.postgresql.Driver;
 
 import java.sql.Connection;
@@ -24,9 +25,13 @@ public class FakePostgresqlDriver extends Driver {
     @Override
     public Connection connect(String url, Properties info) throws SQLException {
         if (url.startsWith(urlPrefix)) {
-            String postgresUrl = url.replaceFirst(urlPrefix, "jdbc:postgresql");
+
+            final String postgresUrl = url.replaceFirst(urlPrefix, "jdbc:postgresql");
+            final Connection connection = DriverManager.getConnection(postgresUrl, info);
+            SystemViews.create(connection);
+
             return new FakeConnection(
-                    DriverManager.getConnection(postgresUrl, info),
+                    connection,
                     new S3ServiceImpl(Global.s3Endpoint())
             );
         } else {
