@@ -35,15 +35,7 @@ class Reader(copyCommand: CopyCommand, columnDefinitions: Seq[ColumnDefinition],
           }
           Row(columns)
         })(collection.breakOut)
-      case CopyFormat.Manifest(manifestLocation) =>
-        (for {
-          content <- contents
-          line <- content.trim.lines
-        } yield {
-          val csvReader = new CsvReader(line, copyCommand.delimiter, copyCommand.nullAs)
-          csvReader.toRow
-        })(collection.breakOut)
-      case CopyFormat.Default =>
+      case CopyFormat.Manifest(_) | CopyFormat.Default =>
         (for {
           content <- contents
           line <- content.trim.lines
