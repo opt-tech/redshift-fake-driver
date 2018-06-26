@@ -35,7 +35,7 @@ class Reader(copyCommand: CopyCommand, columnDefinitions: Seq[ColumnDefinition],
           }
           Row(columns)
         })(collection.breakOut)
-      case CopyFormat.Manifest(manifestLocation) =>
+      case CopyFormat.Manifest(_) | CopyFormat.Default =>
         (for {
           content <- contents
           line <- content.trim.lines
