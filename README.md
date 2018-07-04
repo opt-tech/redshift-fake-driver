@@ -20,7 +20,7 @@ Contributions are welcome !
 
 ## Requirements
 - S3 ([fake-s3](https://github.com/jubos/fake-s3) is OK)
-- `aws-java-sdk-s3` >= 1.10.8
+- `aws-java-sdk-s3`, `aws-java-sdk-sts` >= 1.10.8
 - `postgresql` or `h2` JDBC driver
 - Java >= 1.7
 - (If you use in Scala projects) Scala 2.10.x / 2.11.x / 2.12.x(Java 1.8)
