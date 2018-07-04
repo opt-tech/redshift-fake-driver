@@ -23,7 +23,7 @@ scalacOptions ++= Seq(
 
 libraryDependencies ++= (compileScope(jawn, jsqlparser, scalaCsv) ++
   (if (scalaVersion.value.startsWith("2.10")) Nil else compileScope(parser)) ++
-  testScope(postgres, h2, s3, scalatest) ++
-  providedScope(postgres, h2, s3))
+  testScope(postgres, h2, s3, sts, scalatest) ++
+  providedScope(postgres, h2, s3, sts))
 
 publishMavenStyle := true

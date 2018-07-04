@@ -4,9 +4,14 @@ import java.io.ByteArrayInputStream
 
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.regions.ServiceAbbreviations
-import com.amazonaws.services.s3.{S3ClientOptions, AmazonS3Client}
+import com.amazonaws.services.s3.{AmazonS3Client, S3ClientOptions}
 import com.amazonaws.services.s3.model._
-import jp.ne.opt.redshiftfake.{Global, Credentials}
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
+import com.amazonaws.auth.BasicSessionCredentials
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder
+
+import jp.ne.opt.redshiftfake.{Credentials, Global}
 import jp.ne.opt.redshiftfake.util.Loan._
 
 import scala.annotation.tailrec
@@ -38,6 +43,15 @@ class S3ServiceImpl(endpoint: String) extends S3Service {
     val client = credentials match {
       case Credentials.WithKey(accessKeyId, secretAccessKey) =>
         new AmazonS3Client(new BasicAWSCredentials(accessKeyId, secretAccessKey))
+      case Credentials.WithRole(roleName) =>
+
+        val sts = AWSSecurityTokenServiceClientBuilder.standard.build
+        val assumeRoleRequest = new AssumeRoleRequest
+        assumeRoleRequest.withRoleArn(roleName)
+        val credentials = sts.assumeRole(assumeRoleRequest).getCredentials
+        val sessionCredentials = new BasicSessionCredentials(credentials.getAccessKeyId, credentials.getSecretAccessKey, credentials.getSessionToken)
+        new AmazonS3Client(sessionCredentials)
+
       case _ =>
         new AmazonS3Client()
     }
