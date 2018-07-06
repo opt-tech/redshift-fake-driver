@@ -26,7 +26,8 @@ class CopyCommandParserTest extends FlatSpec {
       timeFormatType = TimeFormatType.Default,
       emptyAsNull = false,
       delimiter = '|',
-      nullAs = "\u000e"
+      nullAs = "\u000e",
+      compression = FileCompressionParameter.None
     )
 
     assert(new CopyCommandParser().parse(command) == Some(expected))
@@ -210,10 +211,42 @@ class CopyCommandParserTest extends FlatSpec {
       timeFormatType = TimeFormatType.Default,
       emptyAsNull = false,
       delimiter = '|',
-      nullAs = "\u000e"
+      nullAs = "\u000e",
+      compression = FileCompressionParameter.None
     )
 
     assert(new CopyCommandParser().parse(command) == Some(expected))
   }
 
+  it should "parse GZIP from copy command" in {
+    val command =
+      s"""
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv.gz'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |GZIP
+         |""".stripMargin
+
+    assert(new CopyCommandParser().parse(command).map(_.compression) == Some(FileCompressionParameter.Gzip))
+  }
+
+  it should "parse BZIP2 from copy command" in {
+    val command =
+      s"""
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv.gz'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |BZIP2
+         |""".stripMargin
+
+    assert(new CopyCommandParser().parse(command).map(_.compression) == Some(FileCompressionParameter.Bzip2))
+  }
+
+  it should "set default file compression correctly" in {
+    val command =
+      s"""
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv.gz'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY';
+         |""".stripMargin
+
+    assert(new CopyCommandParser().parse(command).map(_.compression) == Some(FileCompressionParameter.None))
+  }
 }

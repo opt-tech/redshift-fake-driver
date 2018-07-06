@@ -1,6 +1,7 @@
 package jp.ne.opt.redshiftfake.s3
 
 import java.io.ByteArrayInputStream
+import java.util.zip.GZIPInputStream
 
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.regions.ServiceAbbreviations
@@ -8,11 +9,10 @@ import com.amazonaws.services.s3.{AmazonS3Client, S3ClientOptions}
 import com.amazonaws.services.s3.model._
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
 import com.amazonaws.auth.BasicSessionCredentials
-import com.amazonaws.services.securitytoken.AWSSecurityTokenService
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder
-
-import jp.ne.opt.redshiftfake.{Credentials, Global}
+import jp.ne.opt.redshiftfake.{Credentials, FileCompressionParameter, Global}
 import jp.ne.opt.redshiftfake.util.Loan._
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
@@ -29,7 +29,7 @@ trait S3Service {
   /**
    * Returns a content of s3 object as string for specified key.
    */
-  def downloadAsString(location: S3Location)(credentials: Credentials): String
+  def downloadAsString(location: S3Location, fileCompressionParameter: FileCompressionParameter = FileCompressionParameter.None)(credentials: Credentials): String
 
   /**
    * Upload a string content to specified location.
@@ -94,11 +94,16 @@ class S3ServiceImpl(endpoint: String) extends S3Service {
     iter(Vector.empty, client.listObjects(location.bucket, location.prefix))
   }
 
-  def downloadAsString(location: S3Location)(credentials: Credentials): String = {
+  def downloadAsString(location: S3Location, compression: FileCompressionParameter)(credentials: Credentials): String = {
     val client = mkClient(credentials)
     val request = new GetObjectRequest(location.bucket, location.prefix)
     using(client.getObject(request)) { obj =>
-      io.Source.fromInputStream(obj.getObjectContent).mkString
+      val objectContent = compression match {
+        case FileCompressionParameter.Gzip => new GZIPInputStream(obj.getObjectContent)
+        case FileCompressionParameter.Bzip2 => new BZip2CompressorInputStream(obj.getObjectContent)
+        case _ => obj.getObjectContent
+      }
+      io.Source.fromInputStream(objectContent).mkString
     }
   }
 
@@ -110,5 +115,12 @@ class S3ServiceImpl(endpoint: String) extends S3Service {
 
     val request = new PutObjectRequest(location.bucket, location.prefix, stream, metadata)
     mkClient(credentials).putObject(request)
+  }
+}
+
+class S3ServiceImplWithCustomClient(s3Client: AmazonS3Client, endpoint: String = "") extends S3ServiceImpl(endpoint) {
+
+  override private[redshiftfake] def mkClient(credentials: Credentials) = {
+    s3Client
   }
 }

@@ -53,6 +53,14 @@ class CopyCommandParser extends BaseParser {
     s"$any*(?i)EMPTYASNULL$any*".r
   }
 
+  private[this] val gzipFileCompressionParser = {
+    s"$any*(?i)GZIP".r
+  }
+
+  private[this] val bzip2FileCompressionParser = {
+    s"$any*(?i)BZIP2".r
+  }
+
   def parse(query: String): Option[CopyCommand] = {
     val result = parse(
       ("(?i)COPY".r ~> tableNameParser) ~
@@ -72,7 +80,8 @@ class CopyCommandParser extends BaseParser {
           parse(timeFormatParser, dataConversionParameters).getOrElse(TimeFormatType.Default),
           parse(emptyAsNullParser, dataConversionParameters).successful,
           parse(delimiterParser, dataConversionParameters).getOrElse('|'),
-          parse(nullAsParser, dataConversionParameters).getOrElse("\u000e")
+          parse(nullAsParser, dataConversionParameters).getOrElse("\u000e"),
+          parseFileCompression(dataConversionParameters)
         )
 
         // handle manifest
@@ -89,5 +98,15 @@ class CopyCommandParser extends BaseParser {
       query
     )
     if (result.isEmpty) None else Some(result.get)
+  }
+
+  private def parseFileCompression(dataConversionParameters: String): FileCompressionParameter = {
+    if (parse(gzipFileCompressionParser, dataConversionParameters).successful) {
+      FileCompressionParameter.Gzip
+    } else if (parse(bzip2FileCompressionParser, dataConversionParameters).successful) {
+      FileCompressionParameter.Bzip2
+    } else {
+      FileCompressionParameter.None
+    }
   }
 }
