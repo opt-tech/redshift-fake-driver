@@ -13,7 +13,7 @@ licenses += "Apache 2" -> url("https://raw.githubusercontent.com/opt-tech/redshi
 
 organization := "jp.ne.opt"
 
-version := "1.0.8"
+version := "1.0.9-SNAPSHOT"
 
 scalacOptions ++= Seq(
   "-deprecation",
