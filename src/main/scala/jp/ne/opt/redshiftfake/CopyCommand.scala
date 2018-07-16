@@ -16,7 +16,8 @@ case class CopyCommand(
   timeFormatType: TimeFormatType,
   emptyAsNull: Boolean,
   delimiter: Char,
-  nullAs: String
+  nullAs: String,
+  compression: FileCompressionParameter
 ) {
   val qualifiedTableName = schemaName match {
     case Some(schema) => s"$schema.$tableName"
@@ -50,4 +51,11 @@ object TimeFormatType {
   case object Epochsecs extends TimeFormatType
   case object EpochMillisecs extends TimeFormatType
   case class Custom(pattern: String) extends TimeFormatType
+}
+
+sealed abstract class FileCompressionParameter
+object FileCompressionParameter {
+  case object None extends FileCompressionParameter
+  case object Gzip extends FileCompressionParameter
+  case object Bzip2 extends FileCompressionParameter
 }

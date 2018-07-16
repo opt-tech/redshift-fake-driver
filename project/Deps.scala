@@ -10,4 +10,6 @@ object Deps {
   val sts = "com.amazonaws" % "aws-java-sdk-sts" % "1.11.43"
   val jawn = "org.spire-math" %% "jawn-ast" % "0.10.4"
   val scalatest = "org.scalatest" %% "scalatest" % "3.0.0"
+  val s3Proxy = "org.gaul" % "s3proxy" % "1.6.0"
+  val commonsCompress = "org.apache.commons" % "commons-compress" % "1.17"
 }

@@ -14,6 +14,4 @@ matrix:
     jdk: openjdk8
 
 script:
-  - gem install fakes3
-  - fakes3 -r ./fakes3_root -p 9444 &
-  - sbt -Dfake.awsS3Endpoint="http://localhost:9444/" ++$TRAVIS_SCALA_VERSION test
+  - sbt ++$TRAVIS_SCALA_VERSION test
