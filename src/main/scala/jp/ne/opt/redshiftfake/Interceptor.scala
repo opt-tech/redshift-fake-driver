@@ -23,12 +23,17 @@ trait CopyInterceptor extends Interceptor {
   def executeCopy(connection: Connection, command: CopyCommand, s3Service: S3Service): Unit = {
 
     val columnDefinitions = fetchColumnDefinitions(connection, command)
-    val placeHolders = columnDefinitions.map(_ => "?").mkString(",")
-    val reader = new read.Reader(command, columnDefinitions, s3Service)
+    val filteredColumnDefinitions = getFilteredColumnDefinitions(columnDefinitions, command)
+    val placeHolders = filteredColumnDefinitions.map(_ => "?").mkString(",")
+    val columnNames = filteredColumnDefinitions.map(column => column.columnName).mkString(",")
+    val reader = new read.Reader(command, filteredColumnDefinitions, s3Service)
 
     reader.read().foreach { case Row(columns) =>
-      using(connection.prepareStatement(s"insert into ${command.qualifiedTableName} values ($placeHolders)")) { stmt =>
-        columns.zip(columnDefinitions).zipWithIndex.foreach { case ((Column(value), ColumnDefinition(_, columnType)), parameterIndex) =>
+      if (columns.length != filteredColumnDefinitions.length) {
+        throw new FakeAmazonSQLException(s"Row $columns has different value count then $filteredColumnDefinitions")
+      }
+      using(connection.prepareStatement(s"insert into ${command.qualifiedTableName} ($columnNames) values ($placeHolders)")) { stmt =>
+        columns.zip(filteredColumnDefinitions).zipWithIndex.foreach { case ((Column(value), ColumnDefinition(_, columnType)), parameterIndex) =>
           value match {
             case Some(s) => ParameterBinder(columnType, command.dateFormatType, command.timeFormatType).bind(s, stmt, parameterIndex + 1)
             case None => {
@@ -53,6 +58,37 @@ trait CopyInterceptor extends Interceptor {
 
         stmt.executeUpdate()
       }
+    }
+  }
+
+  /**
+    * If CopyCommand has columnList then:
+    *   first, checks that all columns from columnList exist in database
+    *   second, removes columns from columnDefinitions that are not in CopyCommand.columnList
+    * otherwise:
+    *   return columnDefinitions without changes
+    * @param columnDefinitions column definitions from database
+    * @param command copy command
+    */
+  private def getFilteredColumnDefinitions(columnDefinitions: Vector[ColumnDefinition], command: CopyCommand): Vector[ColumnDefinition] = {
+    command.columnList match {
+      case Some(commandColumnList) =>
+        val dbColumnNamesSet = columnDefinitions.map(col => col.columnName).toSet
+        if (!commandColumnList.toSet.subsetOf(dbColumnNamesSet)) {
+          throw new FakeAmazonSQLException(s"Passed $commandColumnList for table ${command.qualifiedTableName}, but actual columns are $dbColumnNamesSet")
+        }
+
+        val dbColumnMap: Map[String, ColumnDefinition] = columnDefinitions.map {
+          column => column.columnName -> column
+        }.toMap
+
+        commandColumnList.map {
+          columnName => dbColumnMap.get(columnName)
+        }.map {
+          columnDefinition => columnDefinition.get
+        }.toVector
+
+      case None => columnDefinitions
     }
   }
 }
