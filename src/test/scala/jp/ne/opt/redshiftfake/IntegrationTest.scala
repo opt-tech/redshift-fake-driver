@@ -1,16 +1,11 @@
 package jp.ne.opt.redshiftfake
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
-import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
-import java.util.zip.GZIPOutputStream
 
-import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
 import jp.ne.opt.redshiftfake.s3.S3ServiceImplWithCustomClient
 import org.h2.jdbc.FakeH2Driver
 import org.scalatest.fixture
-import jp.ne.opt.redshiftfake.util.Loan.using
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream
+
 
 class IntegrationTest extends fixture.FlatSpec
   with H2Sandbox
@@ -76,7 +71,7 @@ class IntegrationTest extends fixture.FlatSpec
     val fileKey = "gzipped.txt.gz"
 
     s3Client.createBucket("gzipped")
-    loadGzippedDataToS3(gzipped, bucket, fileKey)
+    S3Util.loadGzippedDataToS3(s3Client, gzipped, bucket, fileKey)
     conn.createStatement().execute("create table gzipped(a int, b boolean, c date)")
 
     conn.createStatement().execute(
@@ -108,7 +103,7 @@ class IntegrationTest extends fixture.FlatSpec
     val fileKey = "bzipped2.txt.gz"
 
     s3Client.createBucket("bzipped2")
-    loadBzipped2DataToS3(bzipped2, bucket, fileKey)
+    S3Util.loadBzipped2DataToS3(s3Client, bzipped2, bucket, fileKey)
     conn.createStatement().execute("create table bzipped2(a int, b boolean, c date)")
 
     conn.createStatement().execute(
@@ -131,29 +126,78 @@ class IntegrationTest extends fixture.FlatSpec
     ))
   }
 
-  private def loadGzippedDataToS3(data: String, bucket: String, key: String): Unit = {
-    val arrayOutputStream = new ByteArrayOutputStream()
-    using(new GZIPOutputStream(arrayOutputStream)) (gzipOutStream => {
-      gzipOutStream.write(data.getBytes(StandardCharsets.UTF_8))
-    })
-    val buf = arrayOutputStream.toByteArray
-    val metadata = new ObjectMetadata
-    metadata.setContentLength(buf.length)
-    val request = new PutObjectRequest(bucket, key, new ByteArrayInputStream(buf), metadata)
+  it should "throw exception when columnList in copyCommand contains unknown column" in { conn =>
+    conn.createStatement().execute("create table unknown_column(a int, b boolean, c date)")
 
-    s3Client.putObject(request)
+    val bucket = "unknown-column"
+    val key = "unknownColumn.txt"
+    val data = """1,true,2016-11-20
+                 |4,false,2016-11-21
+               """.stripMargin
+    s3Client.createBucket(bucket)
+    S3Util.loadDataToS3(s3Client, data, bucket, key)
+
+    assertThrows[FakeAmazonSQLException] (
+      conn.createStatement().execute(
+        s"""copy unknown_column(a,b,unknownColumn) from '${Global.s3Scheme}$bucket/$key'
+           |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+           |delimiter ','
+           |dateformat 'auto'
+           |""".stripMargin
+      )
+    )
   }
 
-  private def loadBzipped2DataToS3(data: String, bucket: String, key: String): Unit = {
-    val arrayOutputStream = new ByteArrayOutputStream()
-    using(new BZip2CompressorOutputStream(arrayOutputStream)) (bzip2OutStream => {
-      bzip2OutStream.write(data.getBytes(StandardCharsets.UTF_8))
-    })
-    val buf = arrayOutputStream.toByteArray
-    val metadata = new ObjectMetadata
-    metadata.setContentLength(buf.length)
-    val request = new PutObjectRequest(bucket, key, new ByteArrayInputStream(buf), metadata)
+  it should "throw exception when inserted data has less values than columns in db" in { conn =>
+    conn.createStatement().execute("create table less_values(a int, b boolean, c date)")
 
-    s3Client.putObject(request)
+    val bucket = "less-values"
+    val key = "lessValues.txt"
+    val data = """1,true
+                 |4,false
+               """.stripMargin
+    s3Client.createBucket(bucket)
+    S3Util.loadDataToS3(s3Client, data, bucket, key)
+
+    assertThrows[FakeAmazonSQLException] (
+      conn.createStatement().execute(
+        s"""copy less_values(a,b,c) from '${Global.s3Scheme}$bucket/$key'
+           |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+           |delimiter ','
+           |dateformat 'auto'
+           |""".stripMargin
+      )
+    )
+  }
+
+  it should "execute copy command when inserted data has values for all inserted columns" in { conn =>
+    conn.createStatement().execute("create table all_columns(a int, b boolean, c date)")
+
+    val bucket = "all-columns"
+    val key = "allColumns.txt"
+    val data = """1,2016-11-20
+                 |4,2016-11-21
+               """.stripMargin
+    s3Client.createBucket(bucket)
+    S3Util.loadDataToS3(s3Client, data, bucket, key)
+
+    conn.createStatement().execute(
+      s"""copy all_columns(a,c) from '${Global.s3Scheme}$bucket/$key'
+         |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |delimiter ','
+         |dateformat 'auto'
+         |""".stripMargin
+    )
+
+    val resultSet = conn.createStatement().executeQuery("select * from all_columns order by c")
+    val result = Iterator.continually(resultSet).takeWhile(_.next()).map { rs =>
+      val sdf = new SimpleDateFormat("yyyy-MM-dd")
+      (sdf.format(rs.getDate("c")), rs.getInt("a"), rs.getBoolean("b"))
+    }.toList
+
+    assert(result == List(
+      ("2016-11-20", 1, false),
+      ("2016-11-21", 4, false)
+    ))
   }
 }
