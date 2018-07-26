@@ -22,8 +22,7 @@ public class SystemViews {
 
         final ResultSet resultSet = connection.createStatement().executeQuery("SELECT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'pg_tab_def')");
 
-        resultSet.first();
-        if(!resultSet.getBoolean(1)){
+        if(resultSet.next() && !resultSet.getBoolean(1)){
             connection.createStatement().execute(createPgTableDefView);
         }
     }
