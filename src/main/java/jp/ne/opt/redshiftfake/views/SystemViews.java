@@ -20,7 +20,7 @@ public class SystemViews {
 
     public static void create(final Connection connection) throws SQLException {
 
-        final ResultSet resultSet = connection.createStatement().executeQuery("SELECT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'pg_tab_def')");
+        final ResultSet resultSet = connection.createStatement().executeQuery("SELECT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'pg_table_def')");
 
         if(resultSet.next() && !resultSet.getBoolean(1)){
             connection.createStatement().execute(createPgTableDefView);
