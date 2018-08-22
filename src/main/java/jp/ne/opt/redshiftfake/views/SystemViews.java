@@ -9,7 +9,7 @@ import java.sql.SQLException;
  *
  * Some system tables that exist in redshift do not necessarily exist in postgres
  *
- * This creates pg_tableef as a view on each connection if it does not exist
+ * This creates pg_table_def as a view on each connection if it does not exist
  */
 public class SystemViews {
 
