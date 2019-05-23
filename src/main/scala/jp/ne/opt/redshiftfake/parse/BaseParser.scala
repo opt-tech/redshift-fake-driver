@@ -22,7 +22,6 @@ trait BaseParser extends RegexParsers {
     case ~(bucket, prefix) => S3Location(bucket, prefix.getOrElse(""))
   }
 
-  // TODO: support other auth types
   val awsAuthArgsParser = {
     def parserWithKey = """[\w_]+=""".r ~ """[\w/+=:-]+""".r ~ (";aws_secret_access_key=" ~> """[\w/+=]+""".r).? ^^ {
       case "aws_access_key_id=" ~ accessKeyId ~ Some(secretAccessKey) => Credentials.WithKey(accessKeyId, secretAccessKey)
@@ -31,6 +30,19 @@ trait BaseParser extends RegexParsers {
 
     "'" ~> parserWithKey <~ "'"
   }
+
+  val awsAuthTemporaryParser = {
+    "ACCESS_KEY_ID" ~ """'[\w]*'""".r ~ "SECRET_ACCESS_KEY" ~ """'[\w]*'""".r ~ "SESSION_TOKEN" ~ """'[\w]*'""".r ^^ {
+      case _ ~ access_key_id ~ _ ~ secret_access_key ~ _ ~ session_token =>
+        Credentials.WithTemporaryToken(
+          fromStringLiteral(access_key_id),
+          fromStringLiteral(secret_access_key),
+          fromStringLiteral(session_token)
+        )
+    }
+  }
+
+  private def fromStringLiteral(s: String) = s.drop(1).dropRight(1)
 
   val delimiterParser = s"$any*(?i)DELIMITER".r ~> "(?i)AS".r.? ~> "'" ~> """[|,]""".r <~ "'" <~ s"$any*".r ^^ { s => s.head }
 }

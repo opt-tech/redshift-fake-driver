@@ -52,6 +52,9 @@ class S3ServiceImpl(endpoint: String) extends S3Service {
         val sessionCredentials = new BasicSessionCredentials(credentials.getAccessKeyId, credentials.getSecretAccessKey, credentials.getSessionToken)
         new AmazonS3Client(sessionCredentials)
 
+      case Credentials.WithTemporaryToken(accessKeyId, secretAccessKey, token) =>
+        new AmazonS3Client(new BasicSessionCredentials(accessKeyId, secretAccessKey, token))
+
       case _ =>
         new AmazonS3Client()
     }
