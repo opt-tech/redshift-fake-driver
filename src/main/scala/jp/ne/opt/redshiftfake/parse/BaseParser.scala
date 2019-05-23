@@ -32,17 +32,15 @@ trait BaseParser extends RegexParsers {
   }
 
   val awsAuthTemporaryParser = {
-    "ACCESS_KEY_ID" ~ """'[\w]*'""".r ~ "SECRET_ACCESS_KEY" ~ """'[\w]*'""".r ~ "SESSION_TOKEN" ~ """'[\w]*'""".r ^^ {
-      case _ ~ access_key_id ~ _ ~ secret_access_key ~ _ ~ session_token =>
+    "ACCESS_KEY_ID" ~ "'" ~ """[\w]+""".r ~ "'" ~ "SECRET_ACCESS_KEY" ~ "'" ~ """[\w]+""".r ~ "'" ~ "SESSION_TOKEN" ~ "'" ~ """[\w]+""".r ~ "'" ^^ {
+      case _ ~ _ ~ accessKeyId ~ _ ~ _ ~ _ ~ secretAccessKey ~ _ ~ _ ~ _ ~ sessionToken ~ _=>
         Credentials.WithTemporaryToken(
-          fromStringLiteral(access_key_id),
-          fromStringLiteral(secret_access_key),
-          fromStringLiteral(session_token)
+          accessKeyId,
+          secretAccessKey,
+          sessionToken
         )
     }
   }
-
-  private def fromStringLiteral(s: String) = s.drop(1).dropRight(1)
 
   val delimiterParser = s"$any*(?i)DELIMITER".r ~> "(?i)AS".r.? ~> "'" ~> """[|,]""".r <~ "'" <~ s"$any*".r ^^ { s => s.head }
 }
