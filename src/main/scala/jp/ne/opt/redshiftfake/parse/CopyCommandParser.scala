@@ -66,7 +66,7 @@ class CopyCommandParser extends BaseParser {
       ("(?i)COPY".r ~> tableNameParser) ~
         columnListParser.? ~
         ("(?i)FROM".r ~> dataSourceParser) ~
-        ("(?i)WITH".r.? ~> "(?i)CREDENTIALS".r ~> "(?i)AS".r.? ~> awsAuthArgsParser) ~
+        (("(?i)WITH".r.? ~> "(?i)CREDENTIALS".r ~> "(?i)AS".r.? ~> awsAuthArgsParser) | awsAuthTemporaryParser) ~
         copyFormatParser ~
         s"$any*".r ^^ { case ~(~(~(~(~(TableAndSchemaName(schemaName, tableName), columnList), dataSource), auth), format), dataConversionParameters) =>
         val command = CopyCommand(

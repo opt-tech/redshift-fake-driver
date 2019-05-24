@@ -43,14 +43,17 @@ class S3ServiceImpl(endpoint: String) extends S3Service {
     val client = credentials match {
       case Credentials.WithKey(accessKeyId, secretAccessKey) =>
         new AmazonS3Client(new BasicAWSCredentials(accessKeyId, secretAccessKey))
-      case Credentials.WithRole(roleName) =>
 
+      case Credentials.WithRole(roleName) =>
         val sts = AWSSecurityTokenServiceClientBuilder.standard.build
         val assumeRoleRequest = new AssumeRoleRequest
         assumeRoleRequest.withRoleArn(roleName)
         val credentials = sts.assumeRole(assumeRoleRequest).getCredentials
         val sessionCredentials = new BasicSessionCredentials(credentials.getAccessKeyId, credentials.getSecretAccessKey, credentials.getSessionToken)
         new AmazonS3Client(sessionCredentials)
+
+      case Credentials.WithTemporaryToken(accessKeyId, secretAccessKey, token) =>
+        new AmazonS3Client(new BasicSessionCredentials(accessKeyId, secretAccessKey, token))
 
       case _ =>
         new AmazonS3Client()

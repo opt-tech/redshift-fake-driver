@@ -218,6 +218,60 @@ class CopyCommandParserTest extends FlatSpec {
     assert(new CopyCommandParser().parse(command) == Some(expected))
   }
 
+  it should "parse ACCESS_KEY_ID and SECRET_ACCESS_KEY and SESSION_TOKEN from COPY command" in {
+    val command =
+      s"""
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
+         |ACCESS_KEY_ID 'some_access_key_id'
+         |SECRET_ACCESS_KEY 'some_secret_access_key'
+         |SESSION_TOKEN 'some_session_token';
+         |""".stripMargin
+
+    val expected = CopyCommand(
+      schemaName = Some("public"),
+      tableName = "_foo_42",
+      columnList = None,
+      dataSource = CopyDataSource.S3(S3Location("some-bucket", "path/to/data/foo-bar.csv")),
+      credentials = Credentials.WithTemporaryToken("some_access_key_id", "some_secret_access_key", "some_session_token"),
+      copyFormat = CopyFormat.Default,
+      dateFormatType = DateFormatType.Default,
+      timeFormatType = TimeFormatType.Default,
+      emptyAsNull = false,
+      delimiter = '|',
+      nullAs = "\u000e",
+      compression = FileCompressionParameter.None
+    )
+
+    assert(new CopyCommandParser().parse(command) == Some(expected))
+  }
+
+  it should "parse ACCESS_KEY_ID and SECRET_ACCESS_KEY and TOKEN from COPY command" in {
+    val command =
+      s"""
+         |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
+         |ACCESS_KEY_ID 'some_access_key_id'
+         |SECRET_ACCESS_KEY 'some_secret_access_key'
+         |TOKEN 'some_session_token';
+         |""".stripMargin
+
+    val expected = CopyCommand(
+      schemaName = Some("public"),
+      tableName = "_foo_42",
+      columnList = None,
+      dataSource = CopyDataSource.S3(S3Location("some-bucket", "path/to/data/foo-bar.csv")),
+      credentials = Credentials.WithTemporaryToken("some_access_key_id", "some_secret_access_key", "some_session_token"),
+      copyFormat = CopyFormat.Default,
+      dateFormatType = DateFormatType.Default,
+      timeFormatType = TimeFormatType.Default,
+      emptyAsNull = false,
+      delimiter = '|',
+      nullAs = "\u000e",
+      compression = FileCompressionParameter.None
+    )
+
+    assert(new CopyCommandParser().parse(command) == Some(expected))
+  }
+
   it should "parse GZIP from copy command" in {
     val command =
       s"""

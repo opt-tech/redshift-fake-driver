@@ -81,6 +81,12 @@ val copySql =
       |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
       |manifest""".stripMargin
 
+val copySqlWithTemporaryToken = 
+s"""COPY bar FROM '${endpoint}foo/unloaded_manifest'
+    |ACCESS_KEY_ID 'some_access_key_id'
+    |SECRET_ACCESS_KEY 'some_secret_access_key'
+    |SESSION_TOKEN 'some_session_token';""".stripMargin
+
 stmt.execute(copySql)
 ```
 
