@@ -32,7 +32,7 @@ trait BaseParser extends RegexParsers {
   }
 
   val awsAuthTemporaryParser = {
-    "ACCESS_KEY_ID" ~ "'" ~ """[\w]+""".r ~ "'" ~ "SECRET_ACCESS_KEY" ~ "'" ~ """[\w]+""".r ~ "'" ~ "SESSION_TOKEN" ~ "'" ~ """[\w]+""".r ~ "'" ^^ {
+    "(?i)ACCESS_KEY_ID".r ~ "'" ~ """[\w]+""".r ~ "'" ~ "(?i)SECRET_ACCESS_KEY".r ~ "'" ~ """[\w]+""".r ~ "'" ~ ("(?i)SESSION_TOKEN".r | "(?i)TOKEN".r) ~ "'" ~ """[\w]+""".r ~ "'" ^^ {
       case _ ~ _ ~ accessKeyId ~ _ ~ _ ~ _ ~ secretAccessKey ~ _ ~ _ ~ _ ~ sessionToken ~ _=>
         Credentials.WithTemporaryToken(
           accessKeyId,

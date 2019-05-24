@@ -115,4 +115,25 @@ class UnloadCommandParserTest extends FlatSpec {
     assert(new UnloadCommandParser().parse(command) == Some(expected))
   }
 
+  it should "parse UNLOAD command with ACCESS_KEY_ID and SECRET_ACCESS_KEY and TOKEN" in {
+    val command =
+      s"""
+         |UNLOAD ('${"""SELECT * FROM foo_bar WHERE baz = \'2016-01-01\'"""}') TO '${Global.s3Scheme}some-bucket/path/to/data'
+         |ACCESS_KEY_ID 'some_access_key_id'
+         |SECRET_ACCESS_KEY 'some_secret_access_key'
+         |TOKEN 'some_session_token';
+         |""".stripMargin
+
+    val expected = UnloadCommand(
+      selectStatement = "SELECT * FROM foo_bar WHERE baz = '2016-01-01'",
+      destination = S3Location("some-bucket", "path/to/data"),
+      credentials = Credentials.WithTemporaryToken("some_access_key_id", "some_secret_access_key", "some_session_token"),
+      createManifest = false,
+      delimiter = '|',
+      addQuotes = false
+    )
+
+    assert(new UnloadCommandParser().parse(command) == Some(expected))
+  }
+  
 }
