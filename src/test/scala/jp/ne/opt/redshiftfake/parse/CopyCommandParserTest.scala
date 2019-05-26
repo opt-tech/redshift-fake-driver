@@ -219,12 +219,18 @@ class CopyCommandParserTest extends FlatSpec {
   }
 
   it should "parse ACCESS_KEY_ID and SECRET_ACCESS_KEY and SESSION_TOKEN from COPY command" in {
+
+    val someSessionToken =
+      """AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk5TthT+FvwqnKwRcOIfrRh3cT6UDdyJw
+        |OOvEVPvLXCrrrUtdnniCEXAMPLE/IvU1dYUg2RVAJBanLiHb4IgRmpRV3zrkuWJOgQs8IZZaI
+        |v2BXIa2R4OlgkBN9bkUDNCJiBebXlzBBko7b15fjrBs2+cTQtpZ3CYWFXG8C5zqx37wnOE49mRl/+OtkIKGO7fAE""".stripMargin
+
     val command =
       s"""
          |COPY public._foo_42 FROM '${Global.s3Scheme}some-bucket/path/to/data/foo-bar.csv'
          |ACCESS_KEY_ID 'some_access_key_id'
          |SECRET_ACCESS_KEY 'some_secret_access_key'
-         |SESSION_TOKEN 'some_session_token';
+         |SESSION_TOKEN '$someSessionToken';
          |""".stripMargin
 
     val expected = CopyCommand(
@@ -232,7 +238,7 @@ class CopyCommandParserTest extends FlatSpec {
       tableName = "_foo_42",
       columnList = None,
       dataSource = CopyDataSource.S3(S3Location("some-bucket", "path/to/data/foo-bar.csv")),
-      credentials = Credentials.WithTemporaryToken("some_access_key_id", "some_secret_access_key", "some_session_token"),
+      credentials = Credentials.WithTemporaryToken("some_access_key_id", "some_secret_access_key", someSessionToken),
       copyFormat = CopyFormat.Default,
       dateFormatType = DateFormatType.Default,
       timeFormatType = TimeFormatType.Default,
