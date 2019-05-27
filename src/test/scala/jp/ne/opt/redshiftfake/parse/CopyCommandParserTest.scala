@@ -219,11 +219,8 @@ class CopyCommandParserTest extends FlatSpec {
   }
 
   it should "parse ACCESS_KEY_ID and SECRET_ACCESS_KEY and SESSION_TOKEN from COPY command" in {
+    val someSessionToken = "AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk5TthT+/IvU1dYUg2RVAJBanLiHb4IgRmpRV3zrkuWJOgQs8/+OtkIKGO7fAE"
 
-    val someSessionToken =
-      """AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk5TthT+FvwqnKwRcOIfrRh3cT6UDdyJw
-        |OOvEVPvLXCrrrUtdnniCEXAMPLE/IvU1dYUg2RVAJBanLiHb4IgRmpRV3zrkuWJOgQs8IZZaI
-        |v2BXIa2R4OlgkBN9bkUDNCJiBebXlzBBko7b15fjrBs2+cTQtpZ3CYWFXG8C5zqx37wnOE49mRl/+OtkIKGO7fAE""".stripMargin
 
     val command =
       s"""

@@ -116,10 +116,7 @@ class UnloadCommandParserTest extends FlatSpec {
   }
 
   it should "parse UNLOAD command with ACCESS_KEY_ID and SECRET_ACCESS_KEY and TOKEN" in {
-    val someSessionToken =
-      """AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk5TthT+FvwqnKwRcOIfrRh3cT6UDdyJw
-        |OOvEVPvLXCrrrUtdnniCEXAMPLE/IvU1dYUg2RVAJBanLiHb4IgRmpRV3zrkuWJOgQs8IZZaI
-        |v2BXIa2R4OlgkBN9bkUDNCJiBebXlzBBko7b15fjrBs2+cTQtpZ3CYWFXG8C5zqx37wnOE49mRl/+OtkIKGO7fAE""".stripMargin
+    val someSessionToken = "AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk5TthT+/IvU1dYUg2RVAJBanLiHb4IgRmpRV3zrkuWJOgQs8/+OtkIKGO7fAE"
 
     val command =
       s"""
