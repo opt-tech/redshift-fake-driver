@@ -1,11 +1,9 @@
 import Deps._
 import Helpers._
 
-val scala210 = "2.10.7"
+scalaVersion := "2.11.12"
 
-scalaVersion := scala210
-
-crossScalaVersions := Seq(scala210, "2.11.12", "2.12.8")
+crossScalaVersions := Seq("2.11.12", "2.12.8")
 
 name := "redshift-fake-driver"
 
@@ -22,7 +20,7 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= (compileScope(jawn, jsqlparser, scalaCsv, commonsCompress) ++
-  (if (scalaVersion.value.startsWith("2.10")) Nil else compileScope(parser)) ++
+  compileScope(parser) ++
   testScope(postgres, h2, s3, sts, scalatest, s3Proxy) ++
   providedScope(postgres, h2, s3, sts))
 
