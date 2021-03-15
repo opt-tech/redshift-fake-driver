@@ -1,17 +1,17 @@
 language: scala
 
-matrix:
-  include:
-  - scala: 2.10.6
-    jdk: openjdk7
-  - scala: 2.10.6
-    jdk: openjdk8
-  - scala: 2.11.8
-    jdk: openjdk7
-  - scala: 2.11.8
-    jdk: openjdk8
-  - scala: 2.12.8
-    jdk: openjdk8
+scala:
+  - 2.11.12
+  - 2.12.8
+
+jdk:
+  - openjdk8
 
 script:
   - sbt ++$TRAVIS_SCALA_VERSION test
+
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt/
+    - $HOME/.coursier
