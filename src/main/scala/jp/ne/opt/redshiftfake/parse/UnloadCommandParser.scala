@@ -49,7 +49,7 @@ class UnloadCommandParser extends BaseParser with QueryCompatibility {
     val result = parse(
       statementParser ~
         ("(?i)TO".r ~> "'" ~> s3LocationParser <~ "'") ~
-        (("(?i)WITH".r.? ~> "(?i)CREDENTIALS".r ~> "(?i)AS".r.? ~> awsAuthArgsParser) | awsAuthTemporaryParser) ~
+        (("(?i)WITH".r.? ~> "(?i)CREDENTIALS".r ~> "(?i)AS".r.? ~> awsAuthArgsParser) | awsAuthTemporaryParser | awsAuthAwsRoleParser) ~
         s"$any*".r ^^ { case ~(~(~(statement, s3Location), auth), unloadOptions) =>
         UnloadCommand(
           dropIncompatibilities(statement),

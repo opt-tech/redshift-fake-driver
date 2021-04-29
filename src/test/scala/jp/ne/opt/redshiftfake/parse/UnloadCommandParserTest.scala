@@ -137,5 +137,25 @@ class UnloadCommandParserTest extends FlatSpec {
 
     assert(new UnloadCommandParser().parse(command) == Some(expected))
   }
+
+  it should "parse UNLOAD command with iam_role" in {
+
+    val command =
+      s"""
+         |UNLOAD ('${"""SELECT * FROM foo_bar WHERE baz = \'2016-01-01\'"""}') TO '${Global.s3Scheme}some-bucket/path/to/data'
+         |iam_role 'arn:aws:iam::12345:role/some-role';
+         |""".stripMargin
+
+    val expected = UnloadCommand(
+      selectStatement = "SELECT * FROM foo_bar WHERE baz = '2016-01-01'",
+      destination = S3Location("some-bucket", "path/to/data"),
+      credentials = Credentials.WithRole("arn:aws:iam::12345:role/some-role"),
+      createManifest = false,
+      delimiter = '|',
+      addQuotes = false
+    )
+
+    assert(new UnloadCommandParser().parse(command) == Some(expected))
+  }
   
 }
