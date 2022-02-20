@@ -42,5 +42,12 @@ trait BaseParser extends RegexParsers {
     }
   }
 
+  val awsAuthAwsRoleParser = {
+    "(?i)iam_role".r ~ "'" ~ """[\w/+=:-]+""".r ~ "'" ^^ {
+      case _ ~ _ ~ iamRole~ _=>
+        Credentials.WithRole(iamRole)
+    }
+  }
+
   val delimiterParser = s"$any*(?i)DELIMITER".r ~> "(?i)AS".r.? ~> "'" ~> """[|,]""".r <~ "'" <~ s"$any*".r ^^ { s => s.head }
 }
