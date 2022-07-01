@@ -61,6 +61,8 @@ class CopyCommandParser extends BaseParser {
     s"$any*(?i)BZIP2".r
   }
 
+  private[this] val ignoreHeaderParser = s"$any*(?i)IGNOREHEADER$space+AS".r ~> "'" ~> """[^']*""".r <~ "'" <~ s"$any*".r
+
   def parse(query: String): Option[CopyCommand] = {
     val result = parse(
       ("(?i)COPY".r ~> tableNameParser) ~
@@ -81,6 +83,7 @@ class CopyCommandParser extends BaseParser {
           parse(emptyAsNullParser, dataConversionParameters).successful,
           parse(delimiterParser, dataConversionParameters).getOrElse('|'),
           parse(nullAsParser, dataConversionParameters).getOrElse("\u000e"),
+          parse(ignoreHeaderParser, dataConversionParameters).getOrElse("0").toInt,
           parseFileCompression(dataConversionParameters)
         )
 

@@ -21,10 +21,13 @@ class Writer(unloadCommand: UnloadCommand, s3Service: S3Service) {
     val quoting: Quoting = if (unloadCommand.addQuotes) QUOTE_ALL else QUOTE_NONE
   }
 
-  def write(rows: Seq[Row]): Unit = {
+  def write(columnNames: Seq[String], rows: Seq[Row]): Unit = {
     val stream = new ByteArrayOutputStream()
 
     using(CSVWriter.open(stream)(csvFormat)) { csvWriter =>
+      if (unloadCommand.header) {
+        csvWriter.writeRow(columnNames)
+      }
       rows.foreach { row =>
         csvWriter.writeRow(row.columns.map(_.rawValue.getOrElse("")))
       }

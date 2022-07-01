@@ -104,6 +104,9 @@ trait UnloadInterceptor extends Interceptor {
           val jdbcType = JdbcType.valueOf(resultSet.getMetaData.getColumnType(index))
           Extractor(jdbcType)
         }
+        val columnNames = (1 to columnCount).map { index =>
+          resultSet.getMetaData.getColumnName(index)
+        }
 
         val rows = Iterator.continually(resultSet).takeWhile(_.next()).map { rs =>
           val row = extractors.zipWithIndex.map { case (extractor, i) =>
@@ -112,7 +115,7 @@ trait UnloadInterceptor extends Interceptor {
           Row(row)
         }
 
-        new Writer(command, s3Service).write(rows.toList)
+        new Writer(command, s3Service).write(columnNames, rows.toList)
       }
     }
   }

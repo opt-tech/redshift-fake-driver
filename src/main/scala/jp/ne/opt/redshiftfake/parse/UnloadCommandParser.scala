@@ -38,6 +38,8 @@ class UnloadCommandParser extends BaseParser with QueryCompatibility {
 
   private[this] val addQuotesParser = s"$any*(?i)ADDQUOTES$any*".r
 
+  private[this] val headerParser = s"$any*(?i)HEADER$any*".r
+
   private[this] val manifestParser = s"$any*(?i)MANIFEST$any*".r
 
   private[this] val statementParser = "(?i)UNLOAD".r ~> selectStatementParser ^^ { s =>
@@ -57,7 +59,8 @@ class UnloadCommandParser extends BaseParser with QueryCompatibility {
           auth,
           parse(manifestParser, unloadOptions).successful,
           parse(delimiterParser, unloadOptions).getOrElse('|'),
-          parse(addQuotesParser, unloadOptions).successful
+          parse(addQuotesParser, unloadOptions).successful,
+          parse(headerParser, unloadOptions).successful
         )
       },
       query

@@ -17,6 +17,7 @@ case class CopyCommand(
   emptyAsNull: Boolean,
   delimiter: Char,
   nullAs: String,
+  ignoreHeader: Int,
   compression: FileCompressionParameter
 ) {
   val qualifiedTableName = schemaName match {
