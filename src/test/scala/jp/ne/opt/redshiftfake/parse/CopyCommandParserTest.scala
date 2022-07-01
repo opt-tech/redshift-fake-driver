@@ -27,6 +27,7 @@ class CopyCommandParserTest extends FlatSpec {
       emptyAsNull = false,
       delimiter = '|',
       nullAs = "\u000e",
+      ignoreHeader = 0,
       compression = FileCompressionParameter.None
     )
 
@@ -193,6 +194,32 @@ class CopyCommandParserTest extends FlatSpec {
     assert(new CopyCommandParser().parse(command).map(_.nullAs) == Some("\u000e"))
   }
 
+  it should "parse 'IGNOREHEADER AS' from COPY command" in {
+    val command =
+      s"""
+         |COPY "public"."mytable"
+         |FROM '${Global.s3Scheme}some-bucket/path/to/unloaded_manifest.json'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |IGNOREHEADER AS '1'
+         |MANIFEST
+         |""".stripMargin
+
+    assert(new CopyCommandParser().parse(command).map(_.ignoreHeader) == Some(1))
+  }
+
+  it should "set default 'IGNOREHEADER AS' correctly" in {
+    val command =
+      s"""
+         |COPY "public"."mytable"
+         |FROM '${Global.s3Scheme}some-bucket/path/to/unloaded_manifest.json'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |FORMAT AS CSV
+         |MANIFEST
+         |""".stripMargin
+
+    assert(new CopyCommandParser().parse(command).map(_.ignoreHeader) == Some(0))
+  }
+
   it should "parse aws_role_arn from COPY command" in {
     val command =
       s"""
@@ -212,6 +239,7 @@ class CopyCommandParserTest extends FlatSpec {
       emptyAsNull = false,
       delimiter = '|',
       nullAs = "\u000e",
+      ignoreHeader = 0,
       compression = FileCompressionParameter.None
     )
 
@@ -242,6 +270,7 @@ class CopyCommandParserTest extends FlatSpec {
       emptyAsNull = false,
       delimiter = '|',
       nullAs = "\u000e",
+      ignoreHeader = 0,
       compression = FileCompressionParameter.None
     )
 
@@ -269,6 +298,7 @@ class CopyCommandParserTest extends FlatSpec {
       emptyAsNull = false,
       delimiter = '|',
       nullAs = "\u000e",
+      ignoreHeader = 0,
       compression = FileCompressionParameter.None
     )
 
@@ -294,6 +324,7 @@ class CopyCommandParserTest extends FlatSpec {
       emptyAsNull = false,
       delimiter = '|',
       nullAs = "\u000e",
+      ignoreHeader = 0,
       compression = FileCompressionParameter.None
     )
 
