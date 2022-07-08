@@ -30,7 +30,7 @@ class Writer(unloadCommand: UnloadCommand, s3Service: S3Service) {
       }
     }
     val result = stream.toString("UTF-8")
-    val resultKey = s"${unloadCommand.destination.prefix}0000_part_00"
+    val resultKey = s"${unloadCommand.destination.prefix}000"
 
     if (unloadCommand.createManifest) {
       val resultUrl = unloadCommand.destination.copy(prefix = resultKey).full
