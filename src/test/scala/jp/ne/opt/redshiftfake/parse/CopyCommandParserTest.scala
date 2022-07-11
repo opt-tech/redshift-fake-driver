@@ -207,6 +207,19 @@ class CopyCommandParserTest extends FlatSpec {
     assert(new CopyCommandParser().parse(command).map(_.ignoreHeader) == Some(1))
   }
 
+  it should "parse 'IGNOREHEADER' (without the optional 'AS') from COPY command" in {
+    val command =
+      s"""
+         |COPY "public"."mytable"
+         |FROM '${Global.s3Scheme}some-bucket/path/to/unloaded_manifest.json'
+         |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+         |IGNOREHEADER '1'
+         |MANIFEST
+         |""".stripMargin
+
+    assert(new CopyCommandParser().parse(command).map(_.ignoreHeader) == Some(1))
+  }
+
   it should "set default 'IGNOREHEADER AS' correctly" in {
     val command =
       s"""
