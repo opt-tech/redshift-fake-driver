@@ -48,7 +48,7 @@ class IntegrationTest extends fixture.FlatSpec
           |credentials 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
           |manifest
           |removequotes
-          |ignoreheader as '1'
+          |ignoreheader as 1
           |dateformat 'auto'""".stripMargin
     )
 

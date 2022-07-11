@@ -200,7 +200,7 @@ class CopyCommandParserTest extends FlatSpec {
          |COPY "public"."mytable"
          |FROM '${Global.s3Scheme}some-bucket/path/to/unloaded_manifest.json'
          |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
-         |IGNOREHEADER AS '1'
+         |IGNOREHEADER AS 1
          |MANIFEST
          |""".stripMargin
 
@@ -213,7 +213,7 @@ class CopyCommandParserTest extends FlatSpec {
          |COPY "public"."mytable"
          |FROM '${Global.s3Scheme}some-bucket/path/to/unloaded_manifest.json'
          |CREDENTIALS 'aws_access_key_id=AKIAXXXXXXXXXXXXXXX;aws_secret_access_key=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
-         |IGNOREHEADER '1'
+         |IGNOREHEADER 1
          |MANIFEST
          |""".stripMargin
 

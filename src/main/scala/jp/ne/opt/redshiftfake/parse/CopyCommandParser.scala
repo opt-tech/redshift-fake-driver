@@ -61,7 +61,7 @@ class CopyCommandParser extends BaseParser {
     s"$any*(?i)BZIP2".r
   }
 
-  private[this] val ignoreHeaderParser = s"$any*(?i)IGNOREHEADER".r ~> "(?i)AS".r.? ~> "'" ~> """[^']*""".r <~ "'" <~ s"$any*".r
+  private[this] val ignoreHeaderParser = s"$any*(?i)IGNOREHEADER".r ~> "(?i)AS".r.? ~> """\d*""".r <~ s"$any*".r
 
   def parse(query: String): Option[CopyCommand] = {
     val result = parse(
