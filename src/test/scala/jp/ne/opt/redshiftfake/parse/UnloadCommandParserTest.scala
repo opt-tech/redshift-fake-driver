@@ -21,7 +21,8 @@ class UnloadCommandParserTest extends FlatSpec {
       ),
       createManifest = false,
       delimiter = '|',
-      addQuotes = false
+      addQuotes = false,
+      header = false
     )
 
     assert(new UnloadCommandParser().parse(command) == Some(expected))
@@ -88,7 +89,8 @@ class UnloadCommandParserTest extends FlatSpec {
       credentials = Credentials.WithRole("arn:aws:iam::12345:role/some-role"),
       createManifest = false,
       delimiter = '|',
-      addQuotes = false
+      addQuotes = false,
+      header = false
     )
 
     assert(new UnloadCommandParser().parse(command) == Some(expected))
@@ -109,7 +111,8 @@ class UnloadCommandParserTest extends FlatSpec {
       credentials = Credentials.WithTemporaryToken("some_access_key_id", "some_secret_access_key", "some_session_token"),
       createManifest = false,
       delimiter = '|',
-      addQuotes = false
+      addQuotes = false,
+      header = false
     )
 
     assert(new UnloadCommandParser().parse(command) == Some(expected))
@@ -132,7 +135,8 @@ class UnloadCommandParserTest extends FlatSpec {
       credentials = Credentials.WithTemporaryToken("some_access_key_id", "some_secret_access_key", someSessionToken),
       createManifest = false,
       delimiter = '|',
-      addQuotes = false
+      addQuotes = false,
+      header = false
     )
 
     assert(new UnloadCommandParser().parse(command) == Some(expected))
@@ -152,7 +156,8 @@ class UnloadCommandParserTest extends FlatSpec {
       credentials = Credentials.WithRole("arn:aws:iam::12345:role/some-role"),
       createManifest = false,
       delimiter = '|',
-      addQuotes = false
+      addQuotes = false,
+      header = false
     )
 
     assert(new UnloadCommandParser().parse(command) == Some(expected))
