@@ -1,43 +1,37 @@
-package jp.ne.opt.redshiftfake.postgres;
+package jp.ne.opt.redshiftfake.postgresql;
 
 import jp.ne.opt.redshiftfake.FakeConnection;
 import jp.ne.opt.redshiftfake.Global;
 import jp.ne.opt.redshiftfake.s3.S3Service;
 import jp.ne.opt.redshiftfake.s3.S3ServiceImpl;
 import jp.ne.opt.redshiftfake.views.SystemViews;
-import org.postgresql.Driver;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.Set;
 
-public class FakePostgresqlDriver extends Driver {
-    private static final String urlPrefix = "jdbc:postgresqlredshift";
+public class Driver extends org.postgresql.Driver {
+    private static final String urlPrefix = "jdbc:redshiftpostgresql:";
     private static S3Service s3Service;
 
     static {
         try {
-            DriverManager.registerDriver(new FakePostgresqlDriver());
+            DriverManager.registerDriver(new Driver());
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public static void setS3Service(S3Service service) {
-        s3Service = service;
-    }
-
     @Override
     public Connection connect(String url, Properties info) throws SQLException {
         if (url.startsWith(urlPrefix)) {
-
-            final String postgresUrl = url.replaceFirst(urlPrefix, "jdbc:postgresql");
+            final String postgresUrl = url.replaceFirst(urlPrefix, "jdbc:postgresql:");
             final Connection connection = DriverManager.getConnection(postgresUrl, info);
             SystemViews.create(connection);
-
-            return new FakeConnection(connection,
-                    s3Service == null ? new S3ServiceImpl(Global.s3Endpoint()) : s3Service);
+	    var s3 = s3Service == null ? new S3ServiceImpl(Global.s3Endpoint()) : s3Service;
+            return new FakeConnection(connection, s3);
         } else {
             return null;
         }

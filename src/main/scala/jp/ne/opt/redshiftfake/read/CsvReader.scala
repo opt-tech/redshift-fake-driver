@@ -19,8 +19,7 @@ class CsvReader(csvRow: String, delimiterChar: Char, nullAs: String) {
   private[this] val emptyField = s"${csvFormat.quoteChar}${csvFormat.quoteChar}"
 
   val toRow: Row = {
-    // to recognize last field when the field is empty.
-    val parsed = parser.parseLine(csvRow + csvFormat.delimiter + emptyField)
+    val parsed = parser.parseLine(csvRow)
     parsed.map { xs => Row(xs.map {
       column => Column(if (column.nonEmpty && column != nullAs) Some(column) else None)
     })}.getOrElse(throw InvalidCsvException(s"invalid csv row : $csvRow"))

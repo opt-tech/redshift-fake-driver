@@ -1,0 +1,2 @@
+org.flywaydb.community.database.redshifth2.RedshiftH2DatabaseType
+org.flywaydb.community.database.redshiftpostgresql.RedshiftPostgreSQLDatabaseType

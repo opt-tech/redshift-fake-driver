@@ -1,8 +1,8 @@
 package jp.ne.opt.redshiftfake
 
-import org.scalatest.fixture
+import org.scalatest.flatspec.FixtureAnyFlatSpec
 
-class FakeConnectionTest extends fixture.FlatSpec with H2Sandbox {
+class FakeConnectionTest extends FixtureAnyFlatSpec with H2Sandbox {
 
   it should "convert and execute alter table add column with default and null to postgres equivalents" in { conn =>
     val stmt = conn.createStatement()

@@ -1,6 +1,6 @@
 package jp.ne.opt.redshiftfake.read
 
-import jawn.ast.{JArray, JParser}
+import org.typelevel.jawn.ast.{JArray, JParser}
 import jp.ne.opt.redshiftfake.parse.{BaseParser, ManifestParser}
 import jp.ne.opt.redshiftfake.s3.S3Location
 

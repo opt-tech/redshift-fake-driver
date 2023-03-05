@@ -1,8 +1,8 @@
 package jp.ne.opt.redshiftfake.parse
 
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 
-class DDLParserTest extends FlatSpec {
+class DDLParserTest extends AnyFlatSpec {
   it should "sanitize Redshift specific DDL" in {
     val ddl =
       """

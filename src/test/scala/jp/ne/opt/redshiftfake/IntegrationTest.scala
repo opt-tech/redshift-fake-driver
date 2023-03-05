@@ -1,27 +1,30 @@
 package jp.ne.opt.redshiftfake
 
 import java.text.SimpleDateFormat
-
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest
 import jp.ne.opt.redshiftfake.s3.S3ServiceImplWithCustomClient
-import org.h2.jdbc.FakeH2Driver
-import org.scalatest.fixture
+import jp.ne.opt.redshiftfake.h2.Driver
+import org.scalatest.flatspec.FixtureAnyFlatSpec
 
 
-class IntegrationTest extends fixture.FlatSpec
+class IntegrationTest extends FixtureAnyFlatSpec
   with H2Sandbox
   with S3Sandbox {
 
-  val s3Endpoint = "http://127.0.0.1:7887"
+  val s3Endpoint = "http://127.0.0.1:9090"
   val s3Region = "ap-northeast-1"
   val dummyCredentials = Credentials.WithKey("AKIAXXXXXXXXXXXXXXX", "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY")
   val s3Client = createS3Client(s3Region)
   val s3Service = new S3ServiceImplWithCustomClient(s3Client)
 
-  FakeH2Driver.setS3Service(s3Service)
+  Driver.setS3Service(s3Service)
 
   it should "unload / copy via manifest" in { conn =>
     // create bucket
-    s3Client.createBucket("foo")
+    s3Client.createBucket(CreateBucketRequest.builder()
+      .bucket("foo")
+      .build()
+    )
 
     // create source table
     conn.createStatement().execute("create table foo(a int, b boolean, c date)")
@@ -72,7 +75,10 @@ class IntegrationTest extends fixture.FlatSpec
       """.stripMargin
     val fileKey = "gzipped.txt.gz"
 
-    s3Client.createBucket("gzipped")
+    s3Client.createBucket(CreateBucketRequest.builder()
+      .bucket("gzipped")
+      .build()
+    )
     S3Util.loadGzippedDataToS3(s3Client, gzipped, bucket, fileKey)
     conn.createStatement().execute("create table gzipped(a int, b boolean, c date)")
 
@@ -104,7 +110,10 @@ class IntegrationTest extends fixture.FlatSpec
       """.stripMargin
     val fileKey = "bzipped2.txt.gz"
 
-    s3Client.createBucket("bzipped2")
+    s3Client.createBucket(CreateBucketRequest.builder()
+      .bucket("bzipped2")
+      .build()
+    )
     S3Util.loadBzipped2DataToS3(s3Client, bzipped2, bucket, fileKey)
     conn.createStatement().execute("create table bzipped2(a int, b boolean, c date)")
 
@@ -136,7 +145,10 @@ class IntegrationTest extends fixture.FlatSpec
     val data = """1,true,2016-11-20
                  |4,false,2016-11-21
                """.stripMargin
-    s3Client.createBucket(bucket)
+    s3Client.createBucket(CreateBucketRequest.builder()
+      .bucket(bucket)
+      .build()
+    )
     S3Util.loadDataToS3(s3Client, data, bucket, key)
 
     assertThrows[FakeAmazonSQLException] (
@@ -158,7 +170,10 @@ class IntegrationTest extends fixture.FlatSpec
     val data = """1,true
                  |4,false
                """.stripMargin
-    s3Client.createBucket(bucket)
+    s3Client.createBucket(CreateBucketRequest.builder()
+      .bucket(bucket)
+      .build()
+    )
     S3Util.loadDataToS3(s3Client, data, bucket, key)
 
     assertThrows[FakeAmazonSQLException] (
@@ -180,7 +195,10 @@ class IntegrationTest extends fixture.FlatSpec
     val data = """1,2016-11-20
                  |4,2016-11-21
                """.stripMargin
-    s3Client.createBucket(bucket)
+    s3Client.createBucket(CreateBucketRequest.builder()
+      .bucket(bucket)
+      .build()
+    )
     S3Util.loadDataToS3(s3Client, data, bucket, key)
 
     conn.createStatement().execute(

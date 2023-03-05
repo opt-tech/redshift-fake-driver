@@ -1,8 +1,8 @@
 package jp.ne.opt.redshiftfake.read
 
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 
-class JsonpathsTest extends FlatSpec {
+class JsonpathsTest extends AnyFlatSpec {
   it should "read json document by index in jsonpaths" in {
     val jsonpaths = new Jsonpaths("""{"jsonpaths":["$['b']","$['a']","$['nested']['c']"]}""")
     val reader = jsonpaths.mkReader("""{"a":42.001,"b":true,"nested":{"c":"hello"}}""")
