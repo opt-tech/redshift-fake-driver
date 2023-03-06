@@ -7,6 +7,7 @@ class DDLParser extends BaseParser {
 
   private[this] val alterTableHandler = new AlterTableHandler
 
+  private[this] val alterDistRegex = s"(?i)^.*ALTER$space(SORTKEY|DISTKEY).*$$".r
   private[this] val distStyleRegex = s"(?i)DISTSTYLE$space(EVEN|KEY|ALL)".r
   private[this] val distKeyRegex = s"(?i)DISTKEY$space\\($space$quotedIdentifier$space\\)".r
   private[this] val sortKeyRegex = {
@@ -20,7 +21,7 @@ class DDLParser extends BaseParser {
 
   def sanitize(ddl: String): String = {
 
-    var sanitized = Seq(distStyleRegex, distKeyRegex, sortKeyRegex, encodeRegex).foldLeft(ddl) { (current, regex) =>
+    var sanitized = Seq(alterDistRegex, distStyleRegex, distKeyRegex, sortKeyRegex, encodeRegex).foldLeft(ddl) { (current, regex) =>
       regex.replaceAllIn(current, "")
     }
 

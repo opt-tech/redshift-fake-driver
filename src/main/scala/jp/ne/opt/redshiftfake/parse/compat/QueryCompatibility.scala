@@ -7,7 +7,7 @@ trait QueryCompatibility {
   def dropIncompatibilities(statement: String): String = {
     val unsupportedStmtsDrop = List(
       "(?i)[, ][ ]*approximate",
-      "(?i)with no schema binding"
+      "(?i)with[ ]*no[ ]*schema[ ]*binding",
     )
     var stmt = statement
     for (s <- unsupportedStmtsDrop) {

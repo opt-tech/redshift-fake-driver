@@ -24,8 +24,8 @@ package jp.ne.opt.redshiftfake.parse
 class AlterTableHandler extends BaseParser {
 
   val alterTableRegex = s"(?i)ALTER${space}TABLE$space$identifier".r
-  val addColumn = s"(?i)ALTER${space}TABLE$space$identifier${space}ADD$space(COLUMN$space)?$identifier$space$dataTypeIdentifier".r
-  val columnName = s"(?i)ALTER${space}TABLE$space$identifier${space}ADD$space(COLUMN$space)?".r ~> s"$identifier".r <~ s"$space$identifier".r
+  val addColumn = s"(?i)ALTER${space}TABLE$space$identifier${space}ADD$space(COLUMN$space)?$quotedIdentifier$space$dataTypeIdentifier".r
+  val columnName = s"(?i)ALTER${space}TABLE$space$identifier${space}ADD$space(COLUMN$space)?".r ~> s"$quotedIdentifier".r <~ s"$space$identifier".r
 
   val addColumnNotNull = s"(?i)$any*(NOT$space)?NULL".r
 
@@ -39,7 +39,6 @@ class AlterTableHandler extends BaseParser {
   def handle(sql: String): String ={
     // Do stuff above and return concatenated statements
     // Can execute handle multiple statements in 1?
-
     if(parse(addForeignKey, sql).successful){
       ""
     }
