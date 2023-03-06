@@ -49,7 +49,7 @@ public class RedshiftPostgreSQLDatabaseType extends BaseDatabaseType {
 
     @Override
     public boolean handlesDatabaseProductNameAndVersion(String databaseProductName, String databaseProductVersion, Connection connection) {
-        return true;
+        return databaseProductName.startsWith("PostgreSQL");
     }
 
     @Override

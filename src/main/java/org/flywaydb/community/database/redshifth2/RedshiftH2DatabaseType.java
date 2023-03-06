@@ -49,7 +49,7 @@ public class RedshiftH2DatabaseType extends BaseDatabaseType {
 
     @Override
     public boolean handlesDatabaseProductNameAndVersion(String databaseProductName, String databaseProductVersion, Connection connection) {
-        return true;
+        return databaseProductName.startsWith("H2");
     }
 
     @Override
