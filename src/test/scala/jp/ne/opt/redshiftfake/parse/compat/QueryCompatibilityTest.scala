@@ -14,19 +14,18 @@ class QueryCompatibilityTest extends AnyFlatSpec {
 
   it should "convert convert nvl to coalesce" in {
     val selectStatementWithNVL = "select nvl(name, 'bob') from names"
-    assert(QueryCompatibilityUnderTest.dropIncompatibilities(selectStatementWithNVL)
-      .equalsIgnoreCase("""select coalesce(name, 'bob') from names"""))
+    assert(QueryCompatibilityUnderTest.dropIncompatibilities(selectStatementWithNVL).toLowerCase() == 
+      """select coalesce(name, 'bob') from names""")
 
   }
 
   it should "convert create view WITH NO SCHEMA BINDING" in {
     val createViewStmt = """
       CREATE OR REPLACE VIEW LogSlices 
-      AS SELECT * FROM public.PendingLogSlices 
-      UNION ALL SELECT * FROM public.CompleteLogSlices WITH NO SCHEMA BINDING
+      AS SELECT * FROM public.PendingLogSlices UNION ALL SELECT * FROM public.CompleteLogSlices WITH NO SCHEMA BINDING
     """
-    assert(QueryCompatibilityUnderTest.dropIncompatibilities(createViewStmt)
-      .equalsIgnoreCase("""create or replace view logslices as select * from public.pendinglogslices union all select * from public.completelogslices"""))
+    assert(QueryCompatibilityUnderTest.dropIncompatibilities(createViewStmt).toLowerCase() ==
+      """create or replace procedure drop_table_or_view ( inout name text ) as $$ declare entity_type text; begin select case lower ( table_type ) when 'view' then 'view' else 'table' end from information_schema . tables where lower ( table_name ) = lower ( name ) into entity_type; if entity_type != '' then execute format ( 'drop %s if exists %s' , entity_type , name ); end if; end; $$ language plpgsql; call drop_table_or_view ( 'logslices' ); create view logslices as select * from public . pendinglogslices union all select * from public . completelogslices""")
 
   }
 
