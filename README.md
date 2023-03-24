@@ -58,13 +58,13 @@ Contributions are welcome !
 #### Example in Scala
 
 ```scala
-Class.forName("jp.ne.opt.redshiftfake.postgres.Driver")
+Class.forName("jp.ne.opt.redshiftfake.postgresql.Driver")
 
 val endpoint = "http://localhost:9444/" // in production, scheme  will be "s3://"
 
 val url = "jdbc:redshiftpostgresql://localhost:5432/foo"
 val prop = new Properties()
-prop.setProperty("driver", "jp.ne.opt.redshiftfake.postgres.Driver")
+prop.setProperty("driver", "jp.ne.opt.redshiftfake.postgresql.Driver")
 prop.setProperty("user", "sa")
 
 val conn = DriverManager.getConnection(url, prop)
