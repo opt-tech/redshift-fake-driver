@@ -1,6 +1,6 @@
 package jp.ne.opt.redshiftfake.read
 
-import jawn.ast._
+import org.typelevel.jawn.ast._
 
 import scala.annotation.tailrec
 

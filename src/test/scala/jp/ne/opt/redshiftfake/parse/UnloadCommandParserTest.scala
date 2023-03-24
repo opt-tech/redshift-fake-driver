@@ -2,9 +2,9 @@ package jp.ne.opt.redshiftfake.parse
 
 import jp.ne.opt.redshiftfake._
 import jp.ne.opt.redshiftfake.s3.S3Location
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 
-class UnloadCommandParserTest extends FlatSpec {
+class UnloadCommandParserTest extends AnyFlatSpec {
   it should "parse minimal UNLOAD command" in {
     val command =
       s"""
@@ -13,7 +13,7 @@ class UnloadCommandParserTest extends FlatSpec {
          |""".stripMargin
 
     val expected = UnloadCommand(
-      selectStatement = "SELECT * FROM foo_bar WHERE baz = '2016-01-01'",
+      selectStatement = """SELECT * FROM foo_bar WHERE baz = '2016-01-01'""",
       destination = S3Location("some-bucket", "path/to/data"),
       credentials = Credentials.WithKey(
         accessKeyId = "AKIAXXXXXXXXXXXXXXX",
@@ -84,7 +84,7 @@ class UnloadCommandParserTest extends FlatSpec {
          |""".stripMargin
 
     val expected = UnloadCommand(
-      selectStatement = "SELECT * FROM foo_bar WHERE baz = '2016-01-01'",
+      selectStatement = """SELECT * FROM foo_bar WHERE baz = '2016-01-01'""",
       destination = S3Location("some-bucket", "path/to/data"),
       credentials = Credentials.WithRole("arn:aws:iam::12345:role/some-role"),
       createManifest = false,
@@ -106,7 +106,7 @@ class UnloadCommandParserTest extends FlatSpec {
          |""".stripMargin
 
     val expected = UnloadCommand(
-      selectStatement = "SELECT * FROM foo_bar WHERE baz = '2016-01-01'",
+      selectStatement = """SELECT * FROM foo_bar WHERE baz = '2016-01-01'""",
       destination = S3Location("some-bucket", "path/to/data"),
       credentials = Credentials.WithTemporaryToken("some_access_key_id", "some_secret_access_key", "some_session_token"),
       createManifest = false,
@@ -130,7 +130,7 @@ class UnloadCommandParserTest extends FlatSpec {
          |""".stripMargin
 
     val expected = UnloadCommand(
-      selectStatement = "SELECT * FROM foo_bar WHERE baz = '2016-01-01'",
+      selectStatement = """SELECT * FROM foo_bar WHERE baz = '2016-01-01'""",
       destination = S3Location("some-bucket", "path/to/data"),
       credentials = Credentials.WithTemporaryToken("some_access_key_id", "some_secret_access_key", someSessionToken),
       createManifest = false,
@@ -151,7 +151,7 @@ class UnloadCommandParserTest extends FlatSpec {
          |""".stripMargin
 
     val expected = UnloadCommand(
-      selectStatement = "SELECT * FROM foo_bar WHERE baz = '2016-01-01'",
+      selectStatement = """SELECT * FROM foo_bar WHERE baz = '2016-01-01'""",
       destination = S3Location("some-bucket", "path/to/data"),
       credentials = Credentials.WithRole("arn:aws:iam::12345:role/some-role"),
       createManifest = false,

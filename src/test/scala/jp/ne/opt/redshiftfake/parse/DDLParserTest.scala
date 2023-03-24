@@ -1,8 +1,8 @@
 package jp.ne.opt.redshiftfake.parse
 
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 
-class DDLParserTest extends FlatSpec {
+class DDLParserTest extends AnyFlatSpec {
   it should "sanitize Redshift specific DDL" in {
     val ddl =
       """
@@ -21,6 +21,11 @@ class DDLParserTest extends FlatSpec {
         |""".stripMargin
 
     assert(new DDLParser().sanitize(ddl) == expected)
+  }
+
+  it should "drop alter sortkey query" in {
+    val stmt = "ALTER TABLE CompleteLogSlices ALTER SORTKEY (\"token\")"
+    assert(new DDLParser().sanitize(stmt) == """""")
   }
 
   it should "sanitize DDL with quoted identifier" in {
@@ -98,6 +103,20 @@ class DDLParserTest extends FlatSpec {
     assert(new DDLParser().sanitize(alterTableAddColumn)
       == "ALTER TABLE testDb ADD COLUMN name VARCHAR(1000);" +
       "ALTER TABLE testDb ALTER COLUMN name SET DEFAULT 'anonymous'")
+  }
+
+  it should "do not convert alter table add column with double presision" in {
+    val alterTableAddColumn = "ALTER TABLE PendingLogSlices ADD COLUMN r1aNoCollisionVru DOUBLE PRECISION"
+
+    assert(new DDLParser().sanitize(alterTableAddColumn)
+      == "ALTER TABLE PendingLogSlices ADD COLUMN r1aNoCollisionVru DOUBLE PRECISION")
+  }
+
+  it should "should handle quoted column names" in {
+    val alterTableAddColumn = "ALTER TABLE PendingCalibrationMetrics ADD COLUMN \"Tag\" VARCHAR(50)"
+
+    assert(new DDLParser().sanitize(alterTableAddColumn)
+      == "ALTER TABLE PendingCalibrationMetrics ADD COLUMN \"Tag\" VARCHAR(50)")
   }
 
   it should "handle boolean defaults" in {

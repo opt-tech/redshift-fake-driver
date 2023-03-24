@@ -2,9 +2,9 @@ package jp.ne.opt.redshiftfake.parse
 
 import jp.ne.opt.redshiftfake._
 import jp.ne.opt.redshiftfake.s3.S3Location
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 
-class CopyCommandParserTest extends FlatSpec {
+class CopyCommandParserTest extends AnyFlatSpec {
   it should "parse minimal COPY command" in {
     val command =
       s"""

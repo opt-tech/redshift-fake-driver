@@ -3,12 +3,13 @@ package jp.ne.opt.redshiftfake.parse.compat
 import Ops._
 import net.sf.jsqlparser.expression.operators.arithmetic._
 import net.sf.jsqlparser.expression._
-import net.sf.jsqlparser.expression.operators.conditional.{AndExpression, OrExpression}
+import net.sf.jsqlparser.expression.operators.conditional._
 import net.sf.jsqlparser.expression.operators.relational._
 import net.sf.jsqlparser.parser.CCJSqlParserUtil
 import net.sf.jsqlparser.schema.{Table, Column}
 import net.sf.jsqlparser.statement.create.index.CreateIndex
 import net.sf.jsqlparser.statement.create.table.CreateTable
+import net.sf.jsqlparser.statement.create.schema.CreateSchema
 import net.sf.jsqlparser.statement.delete.Delete
 import net.sf.jsqlparser.statement.drop.Drop
 import net.sf.jsqlparser.statement.execute.Execute
@@ -16,9 +17,18 @@ import net.sf.jsqlparser.statement.insert.Insert
 import net.sf.jsqlparser.statement.replace.Replace
 import net.sf.jsqlparser.statement.truncate.Truncate
 import net.sf.jsqlparser.statement.update.Update
-import net.sf.jsqlparser.statement.{Statements, SetStatement, StatementVisitor}
-import net.sf.jsqlparser.statement.alter.Alter
+import net.sf.jsqlparser.statement._
+import net.sf.jsqlparser.statement.grant._
+import net.sf.jsqlparser.statement.analyze._
+import net.sf.jsqlparser.statement.show._
+import net.sf.jsqlparser.statement.values._
+import net.sf.jsqlparser.statement.alter._
+import net.sf.jsqlparser.statement.comment._
+import net.sf.jsqlparser.statement.upsert._
+import net.sf.jsqlparser.statement.alter.sequence._
 import net.sf.jsqlparser.statement.create.view.{CreateView, AlterView}
+import net.sf.jsqlparser.statement.create.synonym._
+import net.sf.jsqlparser.statement.create.sequence._
 import net.sf.jsqlparser.statement.merge.Merge
 import net.sf.jsqlparser.statement.select._
 
@@ -31,7 +41,7 @@ class CompatibilityHandler extends SelectVisitor
   with SelectItemVisitor
   with StatementVisitor {
 
-  def visit(withItem: WithItem): Unit = withItem.getSelectBody.accept(this)
+  def visit(withItem: WithItem): Unit = withItem.getSubSelect.getSelectBody.accept(this)
 
   def visit(setOpList: SetOperationList): Unit = {
     setOpList.getSelects.asScala.foreach(_.accept(this))
@@ -56,6 +66,15 @@ class CompatibilityHandler extends SelectVisitor
   def visit(tableFunction: TableFunction): Unit = {
   }
 
+  def visit(safeCastExpression: SafeCastExpression): Unit = {
+  }
+
+  def visit(showIndexStatement: ShowIndexStatement): Unit = {
+  }
+
+  def visit(overlapsCondition: OverlapsCondition): Unit = {
+  }
+
   def visit(valuesList: ValuesList): Unit = {
   }
 
@@ -64,11 +83,13 @@ class CompatibilityHandler extends SelectVisitor
   }
 
   def visit(subjoin: SubJoin): Unit = {
-    subjoin.getLeft.accept(this)
-    subjoin.getJoin.getRightItem.accept(this)
+    subjoin.getLeft.accept(this);
+    for (join <- subjoin.getJoinList.asScala) {
+      join.getRightItem.accept(this);
+    }
   }
 
-  def visit(tableName: Table): Unit = {
+  def visit(table: Table): Unit = {
   }
 
   def visit(literal: DateTimeLiteralExpression): Unit = {
@@ -121,7 +142,7 @@ class CompatibilityHandler extends SelectVisitor
     visitBinaryExpression(notEqualsTo)
   }
 
-  def visit(tableColumn: Column): Unit = {
+  def visit(column: Column): Unit = {
   }
 
   def visit(castExpression: CastExpression): Unit = {
@@ -136,9 +157,6 @@ class CompatibilityHandler extends SelectVisitor
     Option(caseExpression.getWhenClauses).foreach { clauses =>
       clauses.asScala.foreach(_.accept(this))
     }
-  }
-
-  def visit(wgexpr: WithinGroupExpression): Unit = {
   }
 
   def visit(eexpr: ExtractExpression): Unit = {
@@ -190,10 +208,7 @@ class CompatibilityHandler extends SelectVisitor
   }
 
   def visit(inExpression: InExpression): Unit = {
-    Option(inExpression.getLeftExpression).fold {
-      Option(inExpression.getLeftItemsList).foreach(_.accept(this))
-    } { _.accept(this) }
-
+    inExpression.getLeftExpression.accept(this);
     inExpression.getRightItemsList.accept(this)
   }
 
@@ -279,10 +294,6 @@ class CompatibilityHandler extends SelectVisitor
     existsExpression.getRightExpression.accept(this)
   }
 
-  def visit(allComparisonExpression: AllComparisonExpression): Unit = {
-    allComparisonExpression.getSubSelect.getSelectBody.accept(this)
-  }
-
   def visit(anyComparisonExpression: AnyComparisonExpression): Unit = {
     anyComparisonExpression.getSubSelect.getSelectBody.accept(this)
   }
@@ -325,24 +336,30 @@ class CompatibilityHandler extends SelectVisitor
   def visit(selectExpressionItem: SelectExpressionItem): Unit = {
 
     selectExpressionItem.getExpression match {
-      case expression: WithinGroupExpression =>
+      case expression: AnalyticExpression =>
         if (expression.getName.equalsIgnoreCase("listagg")){
           val asFunction = new Function()
+          val parameters = new ExpressionList()
+          if (expression.getExpression() != null) {
+            parameters.addExpressions(expression.getExpression())
+            if (expression.getOffset() != null) {
+              parameters.addExpressions(expression.getOffset())
+              if (expression.getDefaultValue() != null) {
+                parameters.addExpressions(expression.getDefaultValue())
+              }
+            }
+          }
           asFunction.setName(expression.getName)
-          asFunction.setParameters(expression.getExprList)
+          asFunction.setParameters(parameters)
           selectExpressionItem.setExpression(asFunction)
         }
       case expression: Function =>
         expression.getName.toLowerCase match {
           case "median" => {
             //https://docs.aws.amazon.com/redshift/latest/dg/r_MEDIAN.html
-            val asPercentileCont = new WithinGroupExpression()
+            val asPercentileCont = new AnalyticExpression().withType(AnalyticType.WITHIN_GROUP)
             asPercentileCont.setName("percentile_cont")
-            val parameters = new ExpressionList
-
-            parameters.setExpressions(List(new DoubleValue("0.5").asInstanceOf[Expression]).asJava)
-            asPercentileCont.setExprList(parameters)
-
+            asPercentileCont.setExpression(new DoubleValue("0.5").asInstanceOf[Expression])
             val orderBy = new OrderByElement()
             orderBy.setExpression(expression.getParameters.getExpressions.get(0))
             asPercentileCont.setOrderByElements(List(orderBy).asJava)
@@ -351,15 +368,15 @@ class CompatibilityHandler extends SelectVisitor
           case "nvl2" => {
             //https://docs.aws.amazon.com/redshift/latest/dg/r_NVL2.html
             val functionsArguments = expression.getParameters.getExpressions
-
-            val asCaseStatement = new CaseExpression
-            val isNullExpression = new IsNullExpression
-            isNullExpression.setNot(true)
-            isNullExpression.setLeftExpression(functionsArguments.get(0))
-            asCaseStatement.setSwitchExpression(isNullExpression)
-            asCaseStatement.setWhenClauses(List(functionsArguments.get(1)).asJava)
-            asCaseStatement.setElseExpression(functionsArguments.get(2))
-
+            val isNullExpression = new IsNullExpression()
+              .withNot(true)
+              .withLeftExpression(functionsArguments.get(0))
+            val whenClause = new WhenClause()
+              .withWhenExpression(isNullExpression)
+              .withThenExpression(functionsArguments.get(1))
+            val asCaseStatement = new CaseExpression()
+              .withWhenClauses(List(whenClause).asJava)
+              .withElseExpression(functionsArguments.get(2))
             selectExpressionItem.setExpression(asCaseStatement)
           }
           //The simplest way to achieve this in postgres is as follows:
@@ -395,7 +412,7 @@ class CompatibilityHandler extends SelectVisitor
             lessThanWhenClause.setWhenExpression(lessThan)
             lessThanWhenClause.setThenExpression(new LongValue(-1))
 
-            asCaseStatement.setWhenClauses(List(greaterThanWhenClause.asInstanceOf[Expression], lessThanWhenClause.asInstanceOf[Expression]).asJava)
+            asCaseStatement.setWhenClauses(List(greaterThanWhenClause, lessThanWhenClause).asJava)
             asCaseStatement.setElseExpression(new LongValue(0))
 
             selectExpressionItem.setExpression(asCaseStatement)
@@ -423,6 +440,15 @@ class CompatibilityHandler extends SelectVisitor
   }
 
   def visit(createTable: CreateTable): Unit = {
+    val specsToIgnore = List("distkey", "sortkey")
+    for (columnDefinition <- createTable.getColumnDefinitions.asScala) {
+      if (columnDefinition.getColumnSpecs() != null) {
+        val newSpecs = columnDefinition.getColumnSpecs.asScala.filter((spec) => {
+          ! specsToIgnore.contains(spec.toLowerCase)
+        })
+        columnDefinition.setColumnSpecs(newSpecs.asJava)
+      }
+    }
     Option(createTable.getSelect).foreach(_.accept(this))
   }
 
@@ -636,7 +662,7 @@ class CompatibilityHandler extends SelectVisitor
   }
 
   def visit(set: SetStatement): Unit = {
-    set.getExpression.accept(this)
+    set.getExpressions().asScala.foreach(_.accept(this))
   }
 
   def visit(merge: Merge): Unit = {
@@ -649,6 +675,174 @@ class CompatibilityHandler extends SelectVisitor
   }
 
   def visit(alter: Alter): Unit = {
+  }
+
+  def visit(geometryDistance: GeometryDistance): Unit = {
+  }
+
+  def visit(isDistinctExpression: IsDistinctExpression): Unit = {
+  }
+
+  def visit(allValue: AllValue): Unit = {
+  }
+
+  def visit(oracleNamedFunctionParam: OracleNamedFunctionParameter): Unit = {
+  }
+
+  def visit(connectByRootOperator: ConnectByRootOperator): Unit = {
+  }
+
+  def visit(jsonFunction: JsonFunction): Unit = {
+  }
+
+  def visit(jsonAggregateFunction: JsonAggregateFunction): Unit = {
+  }
+
+  def visit(timezoneExpression: TimezoneExpression): Unit = {
+  }
+
+  def visit(xmlSerializeExpr: XMLSerializeExpr): Unit = {
+  }
+
+  def visit(variableAssignment: VariableAssignment): Unit = {
+  }
+
+  def visit(arrayConstructor: ArrayConstructor): Unit = {
+  }
+
+  def visit(arrayExpr: ArrayExpression): Unit = {
+  }
+
+  def visit(similiarToExpr: SimilarToExpression): Unit = {
+  }
+
+  def visit(collateExpr: CollateExpression): Unit = {
+  }
+
+  def visit(nextValExpr: NextValExpression): Unit = {
+  }
+
+  def visit(notExpr: NotExpression): Unit = {
+  }
+
+  def visit(rowGetExpr: RowGetExpression): Unit = {
+  }
+
+  def visit(valueListExpr: ValueListExpression): Unit = {
+  }
+
+  def visit(jsonOperator: JsonOperator): Unit = {
+  }
+
+  def visit(tryCaseExpr: TryCastExpression): Unit = {
+  }
+
+  def visit(isBooleanExpression: IsBooleanExpression): Unit = {
+  }
+
+  def visit(fullTextSearch: FullTextSearch): Unit = {
+  }
+
+  def visit(xorExpression: XorExpression): Unit = {
+  }
+
+  def visit(integerDivision: IntegerDivision): Unit = {
+  }
+
+  def visit(bitwiseLeftShift: BitwiseLeftShift): Unit = {
+  }
+
+  def visit(bitwiseRightShift: BitwiseRightShift): Unit = {
+  }
+
+  def visit(parenthesisFromItem: ParenthesisFromItem): Unit = {
+  }
+
+  def visit(namedExpressionList: NamedExpressionList): Unit = {
+  }
+
+  def visit(unsupportedStatement: UnsupportedStatement): Unit = {
+  }
+
+  def visit(alterSystemStatement: AlterSystemStatement): Unit = {
+  }
+
+  def visit(purgeStatement: PurgeStatement): Unit = {
+  }
+
+  def visit(renameTableStatement: RenameTableStatement): Unit = {
+  }
+
+  def visit(ifElseStatement: IfElseStatement): Unit = {
+  }
+
+  def visit(alterSession: AlterSession): Unit = {
+  }
+
+  def visit(createSynonym: CreateSynonym): Unit = {
+  }
+
+  def visit(createFunctionalStatement: CreateFunctionalStatement): Unit = {
+  }
+
+  def visit(alterSequence: AlterSequence): Unit = {
+  }
+
+  def visit(createSequence: CreateSequence): Unit = {
+  }
+
+  def visit(grant: Grant): Unit = {
+  }
+
+  def visit(declareStatement: DeclareStatement): Unit = {
+  }
+
+  def visit(showStatement: ShowStatement): Unit = {
+  }
+
+  def visit(explainStatement: ExplainStatement): Unit = {
+  }
+
+  def visit(describeStatement: DescribeStatement): Unit = {
+  }
+
+  def visit(valuesStatement: ValuesStatement): Unit = {
+  }
+
+  def visit(block: Block): Unit = {
+  }
+
+  def visit(useStatement: UseStatement): Unit = {
+  }
+
+  def visit(upsert: Upsert): Unit = {
+  }
+
+  def visit(showTablesStatement: ShowTablesStatement): Unit = {
+  }
+
+  def visit(showColumnsStatement: ShowColumnsStatement): Unit = {
+  }
+
+  def visit(resetStatement: ResetStatement): Unit = {
+  }
+
+  def visit(createSchema: CreateSchema): Unit = {
+  }
+
+  def visit(commit: Commit): Unit = {
+  }
+
+  def visit(comment: Comment): Unit = {
+  }
+
+  def visit(rollbackStatement: RollbackStatement): Unit = {
+  }
+
+  def visit(savepointStatement: SavepointStatement): Unit = {
+  }
+
+  def visit(analyze: Analyze): Unit = {
   }
 
   private[this] def visitBinaryExpression(expr: BinaryExpression): Unit = {

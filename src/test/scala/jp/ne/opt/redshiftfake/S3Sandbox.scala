@@ -2,43 +2,38 @@ package jp.ne.opt.redshiftfake
 
 import java.net.URI
 
-import com.amazonaws.auth.{AWSCredentials, BasicAWSCredentials}
-import com.amazonaws.regions.RegionUtils
-import com.amazonaws.services.s3.AmazonS3Client
-import org.gaul.s3proxy.{AuthenticationType, S3Proxy}
-import org.jclouds.ContextBuilder
-import org.jclouds.blobstore.BlobStoreContext
+import software.amazon.awssdk.auth.credentials.{
+  StaticCredentialsProvider,
+  AwsBasicCredentials,
+}
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.regions.Region
+import com.adobe.testing.s3mock.S3MockApplication
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
 trait S3Sandbox extends BeforeAndAfterAll {this: Suite =>
 
   val dummyCredentials:  Credentials.WithKey
   val s3Endpoint: String
-
-  var s3Proxy: S3Proxy = _
+  var s3Mock: S3MockApplication = _
 
   override def beforeAll(): Unit = {
-    val blobContext: BlobStoreContext = ContextBuilder
-      .newBuilder("transient")
-      .build(classOf[BlobStoreContext])
-
-    s3Proxy = S3Proxy.builder
-      .blobStore(blobContext.getBlobStore)
-      .awsAuthentication(AuthenticationType.AWS_V4, dummyCredentials.accessKeyId, dummyCredentials.secretAccessKey)
-      .endpoint(URI.create(s3Endpoint))
-      .build
-    s3Proxy.start()
+    s3Mock = S3MockApplication.start()
   }
 
   override def afterAll(): Unit = {
-    s3Proxy.stop()
+    s3Mock.stop()
   }
 
-  def createS3Client(s3Region: String): AmazonS3Client = {
-    val credentials: AWSCredentials = new BasicAWSCredentials(dummyCredentials.accessKeyId, dummyCredentials.secretAccessKey)
-    val client = new AmazonS3Client(credentials)
-    client.setRegion(RegionUtils.getRegion(s3Region))
-    client.setEndpoint(s3Endpoint)
+  def createS3Client(s3Region: String): S3Client = {
+    val credentials = AwsBasicCredentials.create(dummyCredentials.accessKeyId, dummyCredentials.secretAccessKey)
+    val client = S3Client.builder()
+      .credentialsProvider(
+        StaticCredentialsProvider.create(credentials)
+      )
+      .region(Region.of(s3Region))
+      .endpointOverride(URI.create(s3Endpoint))
+      .build()
 
     client
   }

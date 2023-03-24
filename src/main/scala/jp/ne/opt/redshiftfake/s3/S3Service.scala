@@ -2,16 +2,37 @@ package jp.ne.opt.redshiftfake.s3
 
 import java.io.ByteArrayInputStream
 import java.util.zip.GZIPInputStream
+import java.util.stream.Collectors
 
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.regions.ServiceAbbreviations
-import com.amazonaws.services.s3.{AmazonS3Client, S3ClientOptions}
-import com.amazonaws.services.s3.model._
-import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
-import com.amazonaws.auth.BasicSessionCredentials
-import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder
+import software.amazon.awssdk.auth.credentials.{
+  AwsBasicCredentials,
+  AwsSessionCredentials,
+  StaticCredentialsProvider,
+}
+
+import software.amazon.awssdk.core.sync.{
+  RequestBody,
+  ResponseTransformer
+}
+
+import software.amazon.awssdk.services.s3.{
+  S3Configuration,
+  S3Client,
+}
+
+import software.amazon.awssdk.services.s3.model.{
+  GetObjectRequest,
+  GetObjectResponse,
+  PutObjectRequest,
+  ListObjectsV2Request,
+  S3Object,
+}
+
+import software.amazon.awssdk.services.sts.model.AssumeRoleRequest
+import software.amazon.awssdk.services.sts.StsClient
 import jp.ne.opt.redshiftfake.{Credentials, FileCompressionParameter, Global}
 import jp.ne.opt.redshiftfake.util.Loan._
+import java.net.URI
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 
 import scala.annotation.tailrec
@@ -24,7 +45,7 @@ trait S3Service {
   /**
    * Returns a list of s3 objects have specified prefix.
    */
-  def lsRecurse(location: S3Location)(credentials: Credentials): Seq[S3ObjectSummary]
+  def lsRecurse(location: S3Location)(credentials: Credentials): Seq[S3Object]
 
   /**
    * Returns a content of s3 object as string for specified key.
@@ -40,88 +61,94 @@ trait S3Service {
 class S3ServiceImpl(endpoint: String) extends S3Service {
 
   private[redshiftfake] def mkClient(credentials: Credentials) = {
-    val client = credentials match {
+    var clientBuilder = credentials match {
       case Credentials.WithKey(accessKeyId, secretAccessKey) =>
-        new AmazonS3Client(new BasicAWSCredentials(accessKeyId, secretAccessKey))
-
+        S3Client.builder()
+          .credentialsProvider(
+            StaticCredentialsProvider.create(
+              AwsBasicCredentials.create(accessKeyId, secretAccessKey)
+            )
+          )
       case Credentials.WithRole(roleName) =>
-        val sts = AWSSecurityTokenServiceClientBuilder.standard.build
-        val assumeRoleRequest = new AssumeRoleRequest
-        assumeRoleRequest.withRoleArn(roleName)
-        val credentials = sts.assumeRole(assumeRoleRequest).getCredentials
-        val sessionCredentials = new BasicSessionCredentials(credentials.getAccessKeyId, credentials.getSecretAccessKey, credentials.getSessionToken)
-        new AmazonS3Client(sessionCredentials)
+        val sts = StsClient.builder().build()
+        val assumeRoleRequest = AssumeRoleRequest.builder()
+          .roleArn(roleName)
+          .build()
+        val credentials = sts.assumeRole(assumeRoleRequest).credentials()
+        val sessionCredentials = AwsSessionCredentials.create(
+          credentials.accessKeyId,
+          credentials.secretAccessKey,
+          credentials.sessionToken,
+        )
+        S3Client.builder
+          .credentialsProvider(
+            StaticCredentialsProvider.create(sessionCredentials)
+          )
 
       case Credentials.WithTemporaryToken(accessKeyId, secretAccessKey, token) =>
-        new AmazonS3Client(new BasicSessionCredentials(accessKeyId, secretAccessKey, token))
+        S3Client.builder()
+          .credentialsProvider(
+            StaticCredentialsProvider.create(
+              AwsSessionCredentials.create(accessKeyId, secretAccessKey, token)
+            )
+          )
 
       case _ =>
-        new AmazonS3Client()
+        S3Client.builder()
     }
 
-    client.setS3ClientOptions({
-      val options = S3ClientOptions.builder()
-        .setPathStyleAccess(true)
-        .build()
+    clientBuilder = clientBuilder
+      .forcePathStyle(true)
+      .serviceConfiguration(S3Configuration.builder()
+        .chunkedEncodingEnabled(true)
+        .build())
+      .region(Global.region)
 
-      // for compatibility
-      val setChunkedEncodingDisabled = "setChunkedEncodingDisabled"
-      val clazz = classOf[S3ClientOptions]
-      if (clazz.getMethods.map(_.getName).contains(setChunkedEncodingDisabled)) {
-        clazz.getMethod(setChunkedEncodingDisabled, classOf[Boolean]).invoke(options, java.lang.Boolean.valueOf(true))
-      }
-
-      options
-    })
-
-    client.setRegion(Global.region)
     if (endpoint != "s3://") {
-      client.setEndpoint(endpoint)
-    } else {
-      client.setEndpoint(Global.region.getServiceEndpoint(ServiceAbbreviations.S3))
+      clientBuilder = clientBuilder.endpointOverride(URI.create(endpoint))
     }
-    client
+    clientBuilder.build()
   }
 
-  def lsRecurse(location: S3Location)(credentials: Credentials): Seq[S3ObjectSummary] = {
+  def lsRecurse(location: S3Location)(credentials: Credentials): Seq[S3Object] = {
     val client = mkClient(credentials)
-
-    @tailrec def iter(result: Seq[S3ObjectSummary], listing: ObjectListing): Seq[S3ObjectSummary] = {
-      val summaries = listing.getObjectSummaries.asScala
-      if (listing.isTruncated) {
-        iter(result ++ summaries, client.listNextBatchOfObjects(listing))
-      } else {
-        result ++ summaries
-      }
-    }
-    iter(Vector.empty, client.listObjects(location.bucket, location.prefix))
+    val request = ListObjectsV2Request.builder()
+      .bucket(location.bucket)
+      .prefix(location.prefix)
+      .build()
+    client.listObjectsV2Paginator(request)
+      .stream()
+      .flatMap(r => r.contents().stream())
+      .collect(Collectors.toList())
+      .asScala.toList
   }
 
   def downloadAsString(location: S3Location, compression: FileCompressionParameter)(credentials: Credentials): String = {
     val client = mkClient(credentials)
-    val request = new GetObjectRequest(location.bucket, location.prefix)
-    using(client.getObject(request)) { obj =>
-      val objectContent = compression match {
-        case FileCompressionParameter.Gzip => new GZIPInputStream(obj.getObjectContent)
-        case FileCompressionParameter.Bzip2 => new BZip2CompressorInputStream(obj.getObjectContent)
-        case _ => obj.getObjectContent
-      }
-      io.Source.fromInputStream(objectContent).mkString
+    val request = GetObjectRequest.builder()
+      .bucket(location.bucket)
+      .key(location.prefix)
+      .build()
+    val response = client.getObject(request, ResponseTransformer.toInputStream[GetObjectResponse])
+    val objectContent = compression match {
+      case FileCompressionParameter.Gzip => new GZIPInputStream(response)
+      case FileCompressionParameter.Bzip2 => new BZip2CompressorInputStream(response)
+      case _ => response
     }
+    scala.io.Source.fromInputStream(objectContent).mkString
   }
 
   def uploadString(location: S3Location, content: String)(credentials: Credentials): Unit = {
-    val bytes = content.getBytes("UTF-8")
-    val stream = new ByteArrayInputStream(bytes)
-    val metadata = new ObjectMetadata()
-    metadata.setContentLength(bytes.length)
 
-    val request = new PutObjectRequest(location.bucket, location.prefix, stream, metadata)
-    mkClient(credentials).putObject(request)
+    val request = PutObjectRequest.builder()
+      .bucket(location.bucket)
+      .key(location.prefix)
+      .build()
+    mkClient(credentials).putObject(request, RequestBody.fromString(content))
   }
 }
 
-class S3ServiceImplWithCustomClient(s3Client: AmazonS3Client, endpoint: String = "") extends S3ServiceImpl(endpoint) {
+class S3ServiceImplWithCustomClient(s3Client: S3Client, endpoint: String = "") extends S3ServiceImpl(endpoint) {
 
   override private[redshiftfake] def mkClient(credentials: Credentials) = {
     s3Client

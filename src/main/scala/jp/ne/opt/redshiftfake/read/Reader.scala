@@ -24,10 +24,9 @@ class Reader(copyCommand: CopyCommand, columnDefinitions: Seq[ColumnDefinition],
       case CopyFormat.Json(Some(jsonpathsLocation)) =>
         val rawJsonpaths = s3Service.downloadAsString(S3Location(jsonpathsLocation.bucket, jsonpathsLocation.prefix), copyCommand.compression)(copyCommand.credentials)
         val jsonpaths = new Jsonpaths(rawJsonpaths)
-
         (for {
           content <- contents
-          line <- content.trim.lines
+          line <- content.trim.linesIterator
         } yield {
           val jsonReader = jsonpaths.mkReader(line.trim)
           val columns = columnDefinitions.zipWithIndex.map { case (_, n) =>
@@ -38,7 +37,7 @@ class Reader(copyCommand: CopyCommand, columnDefinitions: Seq[ColumnDefinition],
       case CopyFormat.Manifest(_) | CopyFormat.Default =>
         (for {
           content <- contents
-          line <- content.trim.lines.drop(copyCommand.ignoreHeader)
+          line <- content.trim.linesIterator.drop(copyCommand.ignoreHeader)
         } yield {
           val csvReader = new CsvReader(line, copyCommand.delimiter, copyCommand.nullAs)
           csvReader.toRow
@@ -50,7 +49,7 @@ class Reader(copyCommand: CopyCommand, columnDefinitions: Seq[ColumnDefinition],
   private[this] def downloadAllAsStringFromS3(location: S3Location, compression: FileCompressionParameter): Seq[String] = {
     val summaries = s3Service.lsRecurse(location)(copyCommand.credentials)
     summaries.map { summary =>
-      s3Service.downloadAsString(S3Location(location.bucket, summary.getKey), compression)(copyCommand.credentials)
+      s3Service.downloadAsString(S3Location(location.bucket, summary.key), compression)(copyCommand.credentials)
     }
   }
 }
